@@ -39,6 +39,14 @@ export const styles = StyleSheet.create({
     width: 200,
     alignItems: "center",
   },
+  logoutButton: {
+    backgroundColor: "#0f78ceff",
+    paddingVertical: 15,
+    paddingHorizontal: 50,
+    borderRadius: 8,
+    width: 200,
+    alignItems: "center",
+  },
   buttonText: {
     color: "white",
     fontWeight: "bold",
