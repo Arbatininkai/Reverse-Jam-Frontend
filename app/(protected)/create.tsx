@@ -1,10 +1,27 @@
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
 import { styles } from "../../styles/styles";
 
 export default function Create() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.pageTitle}>Create Game Screen</Text>
+      <ImageBackground
+        source={require("../../assets/images/main-background.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Text style={styles.backButtonText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.pageTitle}>Create Game Screen</Text>
+      </ImageBackground>
     </View>
   );
 }

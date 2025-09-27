@@ -1,41 +1,33 @@
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const { width } = Dimensions.get("window");
 
 export const loginStyles = StyleSheet.create({
   formContainer: {
-    paddingVertical: 20,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
-    borderRadius: 8,
-    width: "90%",
-    maxWidth: 400,
-    alignSelf: "center",
-    alignItems: "stretch",
+    marginBottom: 70,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
   },
   label: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: "white",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
-    backgroundColor: "white",
-  },
-  button: {
-    backgroundColor: "#333",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
+    fontSize: 30,
     fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 15,
+    textShadowColor: "#000",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 30,
+    textAlign: "center",
   },
-  errorText: {
-    color: "red",
-    marginBottom: 10,
+  googleButton: {
+    width: Math.min(width * 0.8, 280),
+    height: 48,
+    marginTop: 20,
+    borderRadius: 8,
   },
 });

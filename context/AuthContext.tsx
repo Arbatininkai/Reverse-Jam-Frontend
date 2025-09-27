@@ -1,139 +1,181 @@
-import axios from "axios";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { createContext, ReactNode, useEffect, useState } from "react";
+import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
-type User = { token: string } | null;
+type User = {
+  email?: string;
+  name?: string;
+  photoUrl?: string;
+  token: string;
+} | null;
 
 type AuthContextType = {
   user: User;
   isLoggedIn: boolean;
-  isReady: boolean;
-  signup: (username: string, email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  loginWithGoogle: () => void;
+  logout: () => void;
 };
+
+// Dev-friendly fallback URLs for now (might not work, testers might have to create their own google client IDs)
+const API_BASE_URL =
+  Platform.OS === "android"
+    ? process.env.EXPO_PUBLIC_ANDROID_URL || "http://10.0.2.2:5000"
+    : process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:5000";
+
+const WEB_CLIENT_ID =
+  process.env.EXPO_PUBLIC_WEB_CLIENT_ID ||
+  "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com";
+const ANDROID_CLIENT_ID =
+  process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID ||
+  "945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com";
+const IOS_CLIENT_ID =
+  process.env.EXPO_PUBLIC_IOS_CLIENT_ID ||
+  "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com";
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
 
-const getToken = async (): Promise<string | null> => {
-  try {
-    if (Platform.OS === "web") return localStorage.getItem("token");
-    return await SecureStore.getItemAsync("token");
-  } catch (err) {
-    console.log("Error getting token:", err);
-    return null;
-  }
+// Cross-platform storage wrapper
+const Storage = {
+  getItem: async (key: string) =>
+    Platform.OS === "web"
+      ? localStorage.getItem(key)
+      : SecureStore.getItemAsync(key),
+  setItem: async (key: string, value: string) =>
+    Platform.OS === "web"
+      ? localStorage.setItem(key, value)
+      : SecureStore.setItemAsync(key, value),
+  removeItem: async (key: string) =>
+    Platform.OS === "web"
+      ? localStorage.removeItem(key)
+      : SecureStore.deleteItemAsync(key),
 };
 
-const setToken = async (token: string) => {
-  try {
-    if (Platform.OS === "web") localStorage.setItem("token", token);
-    else await SecureStore.setItemAsync("token", token);
-  } catch (err) {
-    console.log("Error setting token:", err);
-  }
-};
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: WEB_CLIENT_ID,
+  iosClientId: IOS_CLIENT_ID,
+  scopes: ["profile", "email"],
+  offlineAccess: true,
+  forceCodeForRefreshToken: false,
+});
 
-const deleteToken = async () => {
-  try {
-    if (Platform.OS === "web") localStorage.removeItem("token");
-    else await SecureStore.deleteItemAsync("token");
-  } catch (err) {
-    console.log("Error deleting token:", err);
-  }
-};
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
-  // Load saved token at startup
+  // If user was previously logged in, restore their token and user data
   useEffect(() => {
-    (async () => {
+    const loadUser = async () => {
       try {
-        const token = await getToken();
-        if (token) {
-          setUser({ token });
+        const token = await Storage.getItem("token");
+        const userStr = await Storage.getItem("user");
+
+        if (token && userStr) {
+          const user = JSON.parse(userStr);
+          setUser({ ...user, token });
           setIsLoggedIn(true);
+          router.replace("/main");
+          console.log("Restored user:", user);
         }
       } catch (err) {
-        console.log("Error fetching token:", err);
-      } finally {
-        setIsReady(true);
+        console.log("Failed to restore user:", err);
+        await Storage.removeItem("token");
+        await Storage.removeItem("user");
       }
-    })();
+    };
+    loadUser();
   }, []);
 
-  // Signup
-  const signup = async (username: string, email: string, password: string) => {
-    // Call to backend, needs to be implemented with an endpoint
+  const loginWithGoogle = async () => {
     try {
-      const res = await axios.post(
-        "https://192.168.0.103:8081/api/auth/login",
-        {
-          username,
-          email,
-          password,
-        }
-      );
-      if (res.data?.token) {
-        await setToken(res.data.token);
-        setUser({ token: res.data.token });
-        setIsLoggedIn(true);
-        router.replace("/");
-      } else {
-        console.log("Signup failed: no token returned");
+      if (Platform.OS === "android") {
+        await GoogleSignin.hasPlayServices();
       }
-    } catch (err: any) {
-      console.log("Signup error:", err.response?.data || err.message);
-    }
-  };
+      await GoogleSignin.signOut();
 
-  // Login
-  const login = async (email: string, password: string) => {
-    // Call to backend, needs to be implemented with an endpoint
-    try {
-      const res = await axios.post(
-        "https://192.168.0.103:8081/api/auth/login",
-        {
-          email,
-          password,
+      // Sign in and get user info
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+
+      if (idToken) {
+        console.log("Got Google ID Token");
+
+        // Send ID token to backend for verification and authentication
+        const backendResponse = await fetch(
+          `${API_BASE_URL}/api/auth/google-signin`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(idToken),
+          }
+        );
+
+        if (!backendResponse.ok) {
+          const errorData = await backendResponse.json();
+          throw new Error(
+            errorData.message || `Backend error: ${backendResponse.status}`
+          );
         }
-      );
-      if (res.data?.token) {
-        await setToken(res.data.token);
-        setUser({ token: res.data.token });
+
+        const responseData = await backendResponse.json();
+        console.log("Backend response:", responseData);
+
+        // Store both token and refresh token
+        await Storage.setItem("token", responseData.token);
+        await Storage.setItem("user", JSON.stringify(responseData.user));
+
+        setUser({
+          email: responseData.user.email,
+          name: responseData.user.name,
+          photoUrl: responseData.user.photoUrl,
+          token: responseData.token,
+        });
+
         setIsLoggedIn(true);
-        router.replace("/");
-      } else {
-        console.log("Login failed: no token returned");
       }
-    } catch (err: any) {
-      console.log("Login error:", err.response?.data || err.message);
+    } catch (error: any) {
+      console.error("Google sign-in error:", error);
+
+      // Handle specific errors
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled the login flow");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Sign in is in progress already");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("Play services not available or outdated");
+      } else {
+        console.log("Some other error happened");
+      }
     }
   };
 
   const logout = async () => {
     try {
-      await deleteToken();
+      // Sign out from Google
+      await GoogleSignin.signOut();
+
+      // Clear local state
       setUser(null);
       setIsLoggedIn(false);
-      router.replace("../login");
-    } catch (err) {
-      console.log("Logout error:", err);
+      await Storage.removeItem("token");
+      router.replace("/");
+
+      console.log("Logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoggedIn, isReady, signup, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, isLoggedIn, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};

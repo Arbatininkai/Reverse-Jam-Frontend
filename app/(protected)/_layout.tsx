@@ -1,34 +1,30 @@
 import { AuthContext } from "@/context/AuthContext";
 import { Stack, useRouter } from "expo-router";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export default function ProtectedLayout() {
-  const authContext = useContext(AuthContext);
+  const auth = useContext(AuthContext);
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (!authContext) {
-    throw new Error("AuthContext must be used within an AuthProvider");
-  }
+  // Only attempt redirect after mounting
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  if (!authContext.isReady) {
-    return null;
-  }
-
-  if (authContext.isReady && !authContext.isLoggedIn) {
-    router.replace("../login");
-  }
+  useEffect(() => {
+    if (isMounted && auth && !auth.isLoggedIn) {
+      router.replace("/login");
+    }
+  }, [auth?.isLoggedIn, isMounted]);
 
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: "#333333",
-        },
+        headerStyle: { backgroundColor: "#333333" },
         headerTintColor: "white",
-        headerTitleStyle: {
-          fontWeight: "bold",
-        },
-        headerShown: true,
+        headerTitleStyle: { fontWeight: "bold" },
+        headerShown: false,
       }}
     />
   );
