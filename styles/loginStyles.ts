@@ -20,8 +20,8 @@ export const loginStyles = StyleSheet.create({
     color: "#fff",
     marginBottom: 15,
     textShadowColor: "#000",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 30,
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10,
     textAlign: "center",
   },
   googleButton: {

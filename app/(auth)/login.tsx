@@ -22,7 +22,7 @@ export default function Login() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
 

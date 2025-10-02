@@ -8,6 +8,7 @@ import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 type User = {
+  id: string;
   email?: string;
   name?: string;
   photoUrl?: string;
@@ -132,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await Storage.setItem("user", JSON.stringify(responseData.user));
 
         setUser({
+          id: responseData.user.id,
           email: responseData.user.email,
           name: responseData.user.name,
           photoUrl: responseData.user.photoUrl,
@@ -165,6 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setIsLoggedIn(false);
       await Storage.removeItem("token");
+      await Storage.removeItem("user");
       router.replace("/");
 
       console.log("Logged out successfully");
