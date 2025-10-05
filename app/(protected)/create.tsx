@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { RadioButton } from "react-native-paper";
+import { Checkbox, RadioButton } from "react-native-paper";
 import { styles } from "../../styles/styles";
 
 export default function Create() {
@@ -102,34 +102,28 @@ export default function Create() {
 
         <Text style={createStyles.selectText}>Select Voting System</Text>
 
-        <RadioButton.Group
-          onValueChange={(newValue) => {
-            if (newValue === "ai") {
-              setAiRate(true);
-              setHumanRate(false);
-            } else {
-              setAiRate(false);
-              setHumanRate(true);
-            }
-          }}
-          value={aiRate ? "ai" : "people"}
-        >
-          <View style={createStyles.radioBox}>
-            <View style={createStyles.option}>
-              <RadioButton value="ai" color="#FF5722" uncheckedColor="#ccc" />
-              <Text style={createStyles.optionLabel}>AI Score</Text>
-            </View>
+        <View style={createStyles.radioBox}>
 
-            <View style={createStyles.option}>
-              <RadioButton
-                value="people"
-                color="#f321a3ff"
-                uncheckedColor="#ccc"
-              />
-              <Text style={createStyles.optionLabel}>People Vote</Text>
-            </View>
+          <View style={createStyles.option}>
+            <Checkbox
+              status={aiRate ? "checked" : "unchecked"}
+              onPress={() => setAiRate(!aiRate)}
+              color="#FF5722"
+              uncheckedColor="#ccc"
+            />
+            <Text style={createStyles.optionLabel}>AI Score</Text>
           </View>
-        </RadioButton.Group>
+
+          <View style={createStyles.option}>
+            <Checkbox
+              status={humanRate ? "checked" : "unchecked"}
+              onPress={() => setHumanRate(!humanRate)}
+              color="#f321a3ff"
+              uncheckedColor="#ccc"
+            />
+            <Text style={createStyles.optionLabel}>People Vote</Text>
+          </View>
+        </View>
 
         <View style={createStyles.createButtonWrapper}>
           <TouchableOpacity onPress={handleCreateLobby} style={styles.button}>

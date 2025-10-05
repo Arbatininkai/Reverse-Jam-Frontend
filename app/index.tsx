@@ -39,9 +39,7 @@ export default function Index() {
             <Text style={styles.playButtonText}>Play</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingsButton}>
-            <Text style={styles.settingsButtonText}>Settings</Text>
-          </TouchableOpacity>
+
         </View>
       </ImageBackground>
     </View>
