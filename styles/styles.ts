@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const { width } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   container: {
@@ -13,7 +15,7 @@ export const styles = StyleSheet.create({
     textShadowColor: "#000",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
-    marginTop: 100,
+    marginTop: 80,
   },
   sectoinTitleText: {
     color: "white",
@@ -33,6 +35,16 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
     marginTop: 100,
+  },
+  smallerText: {
+    color: "#fff",
+    fontSize: 30,
+    fontWeight: "bold",
+    textAlign: "center",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 4,
+    marginTop: 30,
   },
   backgroundImage: {
     flex: 1,
@@ -70,6 +82,25 @@ export const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#fff",
+  },
+  songOptionsContainer: {
+    flexDirection: "row",
+    justifyContent: "center", // center all icons
+    alignItems: "center",
+    width: width > 600 ? "50%" : "80%",
+    alignSelf: "center",
+    backgroundColor: "#983A3A",
+    padding: 10,
+    marginTop: 30,
+    borderRadius: 15,
+    borderWidth: 3,
+    borderColor: "#fff",
+  },
+  sideIcon: {
+    marginHorizontal: 20,
+  },
+  middleIcon: {
+    marginHorizontal: 20,
   },
   settingsButton: {
     backgroundColor: "#000",
@@ -113,6 +144,34 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 25,
   },
+  deleteText: {
+    color: "#fc1a1aff",
+    fontWeight: "bold",
+    fontSize: 25,
+  },
+  deleteButton: {
+    backgroundColor: "#983A3A",
+    width: 276,
+    height: 71,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: "#fc1a1aff",
+    paddingTop: 11,
+    paddingRight: 26,
+    paddingBottom: 11,
+    paddingLeft: 26,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 5,
+      height: 5,
+    },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+    elevation: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+  },
   backButton: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -127,6 +186,15 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 8,
     color: "#fff",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10,
+  },
+  leaveText: {
+    fontSize: 21,
+    fontWeight: "bold",
+    marginLeft: 8,
+    color: "#f33535ff",
     textShadowColor: "#000",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
@@ -177,5 +245,5 @@ export const styles = StyleSheet.create({
     borderRightColor: "transparent",
     borderBottomColor: "black",
     transform: [{ rotate: "90deg" }],
-  }
+  },
 });
