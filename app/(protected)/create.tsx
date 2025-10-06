@@ -1,5 +1,6 @@
 import { AuthContext } from "@/context/AuthContext";
 import { createStyles } from "@/styles/createStyles";
+import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useContext, useState } from "react";
@@ -44,14 +45,16 @@ export default function Create() {
       });
 
       if (!response.ok) {
-        console.log("Server error:", await response.text());
+        console.log("Server error:", await response);
         return;
       }
 
       const lobby = await response.json();
       console.log("Lobby created:", lobby);
 
-      // TODO: Send player to waiting room where others can join
+      await Storage.setItem(`lobby-${lobby.id}`, JSON.stringify(lobby));
+
+      router.replace(`/waiting-room/${lobby.id}`);
     } catch (error) {
       console.log("Failed to create lobby", error);
     }
@@ -79,7 +82,7 @@ export default function Create() {
           onValueChange={(newValue) => setIsPrivate(newValue === "private")}
           value={isPrivate ? "private" : "public"}
         >
-          <View style={createStyles.radioBox}>
+          <View style={createStyles.containerBox}>
             <View style={createStyles.option}>
               <RadioButton
                 value="public"
@@ -102,8 +105,7 @@ export default function Create() {
 
         <Text style={createStyles.selectText}>Select Voting System</Text>
 
-        <View style={createStyles.radioBox}>
-
+        <View style={createStyles.containerBox}>
           <View style={createStyles.option}>
             <Checkbox
               status={aiRate ? "checked" : "unchecked"}

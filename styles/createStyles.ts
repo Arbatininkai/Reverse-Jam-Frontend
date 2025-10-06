@@ -11,7 +11,17 @@ export const createStyles = StyleSheet.create({
     textShadowRadius: 10,
     marginTop: 10,
   },
-  radioBox: {
+  playerName: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "left",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    flexShrink: 1,
+  },
+  containerBox: {
     alignSelf: "center",
     width: "70%",
     borderWidth: 3,
@@ -21,6 +31,40 @@ export const createStyles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 20,
     paddingHorizontal: 10,
+  },
+  playerBox: {
+    flexDirection: "column",
+    width: "90%",
+    alignSelf: "center",
+    alignItems: "stretch",
+    justifyContent: "space-between",
+    backgroundColor: "#983A3A",
+    borderColor: "#fff",
+    marginTop: 20,
+    borderRadius: 5,
+    borderWidth: 3,
+    paddingVertical: 25,
+    paddingHorizontal: 10,
+    gap: 20,
+  },
+  playerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderColor: "#fff",
+    borderWidth: 2,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    gap: 15,
+  },
+  playerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   option: {
     flexDirection: "row",
@@ -50,6 +94,9 @@ export const createStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-
+  seedWrapper: {
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

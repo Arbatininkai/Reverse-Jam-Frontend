@@ -1,9 +1,9 @@
+import { Storage } from "@/utils/utils";
 import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -41,22 +41,6 @@ const IOS_CLIENT_ID =
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
-
-// Cross-platform storage wrapper
-const Storage = {
-  getItem: async (key: string) =>
-    Platform.OS === "web"
-      ? localStorage.getItem(key)
-      : SecureStore.getItemAsync(key),
-  setItem: async (key: string, value: string) =>
-    Platform.OS === "web"
-      ? localStorage.setItem(key, value)
-      : SecureStore.setItemAsync(key, value),
-  removeItem: async (key: string) =>
-    Platform.OS === "web"
-      ? localStorage.removeItem(key)
-      : SecureStore.deleteItemAsync(key),
-};
 
 // Configure Google Sign-In
 GoogleSignin.configure({

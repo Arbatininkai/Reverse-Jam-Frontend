@@ -37,14 +37,12 @@ export default function Settings() {
             <Text style={styles.buttonText}>Change Name</Text>
           </TouchableOpacity>
 
-
           <TouchableOpacity
             onPress={() => router.push("/audio")}
             style={styles.button}
           >
             <Text style={styles.buttonText}>Audio</Text>
           </TouchableOpacity>
-
         </View>
       </ImageBackground>
     </View>

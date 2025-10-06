@@ -1,8 +1,17 @@
+import { AuthContext } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { ImageBackground, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useContext, useState } from "react";
+import {
+  ImageBackground,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { styles } from "../../styles/styles";
+
 export default function Name() {
   const router = useRouter();
   const icons = ["😀", "🤠", "🥸", "😎", "🧐"];
@@ -16,7 +25,27 @@ export default function Name() {
     setCurrentIndex((prev) => (prev - 1 + icons.length) % icons.length);
   };
 
-  const [buttonText, setButtonText] = useState("");
+  const { user } = useContext(AuthContext)!;
+  const tokenId = user?.token;
+
+  const [buttonText, setButtonText] = useState(user?.name || "");
+
+  const API_BASE_URL =
+    Platform.OS === "android"
+      ? process.env.EXPO_PUBLIC_ANDROID_URL
+      : process.env.EXPO_PUBLIC_BASE_URL;
+
+  const saveName = async () => {
+    await fetch(`${API_BASE_URL}/api/Player/name-change`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tokenId}`,
+      },
+      body: JSON.stringify({ name: buttonText }),
+    });
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -34,22 +63,18 @@ export default function Name() {
         <Text style={styles.pageTitle}>Select Icon😃</Text>
 
         <View style={{ alignItems: "center", gap: 10 }}>
-
           <Text style={{ fontSize: 200 }}>{icons[currentIndex]}</Text>
 
           <View style={{ flexDirection: "row", gap: 20 }}>
             <TouchableOpacity
               onPress={prevIcon}
               style={styles.triangleLeft}
-            >
-
-            </TouchableOpacity>
+            ></TouchableOpacity>
 
             <TouchableOpacity
               onPress={nextIcon}
               style={styles.triangleRight}
-            >
-            </TouchableOpacity>
+            ></TouchableOpacity>
           </View>
           <Text style={styles.sectoinTitleText}>Change name</Text>
 
@@ -60,18 +85,14 @@ export default function Name() {
             value={buttonText}
             onChangeText={setButtonText}
             keyboardType="numeric"
-            maxLength={12}
+            maxLength={17}
           />
 
-          <TouchableOpacity
-            style={styles.button}
-          >
+          <TouchableOpacity style={styles.button} onPress={saveName}>
             <Text style={styles.buttonText}>SAVE</Text>
           </TouchableOpacity>
-
         </View>
       </ImageBackground>
     </View>
   );
-
 }
