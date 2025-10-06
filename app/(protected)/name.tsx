@@ -2,11 +2,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ImageBackground, Text, TextInput, TouchableOpacity, View } from "react-native";
-
 import { styles } from "../../styles/styles";
-
-export default function Join() {
+export default function Name() {
   const router = useRouter();
+  const icons = ["😀", "🤠", "🥸", "😎", "🧐"];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextIcon = () => {
+    setCurrentIndex((prev) => (prev + 1) % icons.length);
+  };
+
+  const prevIcon = () => {
+    setCurrentIndex((prev) => (prev - 1 + icons.length) % icons.length);
+  };
+
   const [buttonText, setButtonText] = useState("");
   return (
     <View style={styles.container}>
@@ -22,48 +31,47 @@ export default function Join() {
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.pageTitle}>Join Game Screen</Text>
+        <Text style={styles.pageTitle}>Select Icon😃</Text>
 
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingBottom: 150,
-          }}
-        >
-          <Text style={styles.sectoinTitleText}>Join random lobby</Text>
+        <View style={{ alignItems: "center", gap: 10 }}>
 
-          <TouchableOpacity
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>RANDOM LOBBY</Text>
-          </TouchableOpacity>
+          <Text style={{ fontSize: 200 }}>{icons[currentIndex]}</Text>
 
-          <Text style={styles.sectoinTitleText}>Enter seed</Text>
+          <View style={{ flexDirection: "row", gap: 20 }}>
+            <TouchableOpacity
+              onPress={prevIcon}
+              style={styles.triangleLeft}
+            >
+
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={nextIcon}
+              style={styles.triangleRight}
+            >
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.sectoinTitleText}>Change name</Text>
 
           <TextInput
             style={[styles.button, styles.buttonText, { textAlign: "center" }]}
-            placeholder="#_ _ _ _"
+            placeholder="Enter name"
             placeholderTextColor="#ffffff"
             value={buttonText}
-            onChangeText={(text) => {
-              const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
-              setButtonText(cleaned);
-            }}
-
+            onChangeText={setButtonText}
             keyboardType="numeric"
-            maxLength={4}
+            maxLength={12}
           />
 
           <TouchableOpacity
-
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Join game</Text>
+            <Text style={styles.buttonText}>SAVE</Text>
           </TouchableOpacity>
+
         </View>
       </ImageBackground>
     </View>
   );
+
 }

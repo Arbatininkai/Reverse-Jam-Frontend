@@ -21,6 +21,31 @@ export default function Settings() {
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.pageTitle}>Settings</Text>
+
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: 150,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => router.push("/name")}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Change Name</Text>
+          </TouchableOpacity>
+
+
+          <TouchableOpacity
+            onPress={() => router.push("/audio")}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Audio</Text>
+          </TouchableOpacity>
+
+        </View>
       </ImageBackground>
     </View>
   );

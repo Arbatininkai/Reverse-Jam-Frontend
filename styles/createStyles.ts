@@ -50,4 +50,6 @@ export const createStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+
 });
