@@ -1,19 +1,18 @@
 import { AuthContext } from "@/context/AuthContext";
 import { styles } from "@/styles/styles";
 import { Storage } from "@/utils/utils";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
 import Feather from "@expo/vector-icons/Feather";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
+import MusicPlayer from "./musicPlayer";
 
 export default function Game() {
   const router = useRouter();
   const { id } = useGlobalSearchParams<{ id: string }>();
 
   const [lobby, setLobby] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
@@ -75,23 +74,7 @@ export default function Game() {
             style={styles.sideIcon}
           />
 
-          <TouchableOpacity onPress={() => setIsPlaying(!isPlaying)}>
-            {isPlaying ? (
-              <AntDesign
-                name="play-circle"
-                size={80}
-                color="#fff"
-                style={styles.middleIcon}
-              />
-            ) : (
-              <AntDesign
-                name="pause-circle"
-                size={80}
-                color="#fff"
-                style={styles.middleIcon}
-              />
-            )}
-          </TouchableOpacity>
+          <MusicPlayer />
 
           <Feather
             name="refresh-ccw"
