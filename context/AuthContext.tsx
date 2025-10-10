@@ -4,6 +4,7 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
+import { jwtDecode } from "jwt-decode";
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -15,9 +16,14 @@ type User = {
   token: string;
 } | null;
 
+type DecodedToken = {
+  exp: number; // expiration timestamp in seconds
+};
+
 type AuthContextType = {
   user: User;
   isLoggedIn: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loginWithGoogle: () => void;
   logout: () => void;
 };
@@ -63,11 +69,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userStr = await Storage.getItem("user");
 
         if (token && userStr) {
-          const user = JSON.parse(userStr);
-          setUser({ ...user, token });
-          setIsLoggedIn(true);
-          router.replace("/main");
-          console.log("Restored user:", user);
+          const decoded: DecodedToken = jwtDecode(token);
+          const now = Date.now() / 1000;
+
+          // Check if token is still valid
+          if (decoded.exp > now) {
+            const user = JSON.parse(userStr);
+            setUser({ ...user, token });
+            setIsLoggedIn(true);
+            router.replace("/main");
+            console.log("Restored user:", user);
+          } else {
+            console.log("Token expired, removing saved session");
+            await Storage.removeItem("token");
+            await Storage.removeItem("user");
+          }
         }
       } catch (err) {
         console.log("Failed to restore user:", err);
@@ -161,7 +177,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, isLoggedIn, loginWithGoogle, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

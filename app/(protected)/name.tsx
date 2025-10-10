@@ -1,4 +1,5 @@
 import { AuthContext } from "@/context/AuthContext";
+import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useContext, useState } from "react";
@@ -25,7 +26,7 @@ export default function Name() {
     setCurrentIndex((prev) => (prev - 1 + icons.length) % icons.length);
   };
 
-  const { user } = useContext(AuthContext)!;
+  const { user, setUser } = useContext(AuthContext)!;
   const tokenId = user?.token;
 
   const [buttonText, setButtonText] = useState(user?.name || "");
@@ -36,7 +37,7 @@ export default function Name() {
       : process.env.EXPO_PUBLIC_BASE_URL;
 
   const saveName = async () => {
-    await fetch(`${API_BASE_URL}/api/Player/name-change`, {
+    const response = await fetch(`${API_BASE_URL}/api/Player/name-change`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -44,6 +45,12 @@ export default function Name() {
       },
       body: JSON.stringify({ name: buttonText }),
     });
+
+    if (response.ok) {
+      const updatedUser = { ...user!, name: buttonText };
+      setUser(updatedUser);
+      await Storage.setItem("user", JSON.stringify(updatedUser));
+    }
   };
 
   return (

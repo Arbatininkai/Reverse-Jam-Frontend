@@ -1,7 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ImageBackground, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ImageBackground,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { styles } from "../../styles/styles";
 
@@ -34,9 +40,7 @@ export default function Join() {
         >
           <Text style={styles.sectoinTitleText}>Join random lobby</Text>
 
-          <TouchableOpacity
-            style={styles.button}
-          >
+          <TouchableOpacity style={styles.button}>
             <Text style={styles.buttonText}>RANDOM LOBBY</Text>
           </TouchableOpacity>
 
@@ -51,15 +55,11 @@ export default function Join() {
               const cleaned = text.replace(/[^0-9]/g, "").slice(0, 4);
               setButtonText(cleaned);
             }}
-
             keyboardType="numeric"
             maxLength={4}
           />
 
-          <TouchableOpacity
-
-            style={styles.button}
-          >
+          <TouchableOpacity style={styles.button}>
             <Text style={styles.buttonText}>Join game</Text>
           </TouchableOpacity>
         </View>
