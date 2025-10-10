@@ -2,21 +2,43 @@ import { AuthContext } from "@/context/AuthContext";
 import { styles } from "@/styles/styles";
 import { Storage } from "@/utils/utils";
 import Entypo from "@expo/vector-icons/Entypo";
-import Feather from "@expo/vector-icons/Feather";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
-import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
-import MusicPlayer from "./musicPlayer";
+import {
+  BackHandler,
+  Image,
+  ImageBackground,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MusicPlayer from "./music-player";
+
+const JAMENDO_CLIENT_ID = "80fcf0c2";
 
 export default function Game() {
   const router = useRouter();
   const { id } = useGlobalSearchParams<{ id: string }>();
 
   const [lobby, setLobby] = useState<any>(null);
+  const [trackUrl, setTrackUrl] = useState<string | null>(null);
+  const [trackName, setTrackName] = useState<string>("");
+  const [albumCover, setAlbumCover] = useState<string | null>(null);
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
 
+  // Make it so that the user cannot swipe back to the previous page
+  useEffect(() => {
+    const backHandler = () => true; // block hardware back
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backHandler
+    );
+    return () => subscription.remove();
+  }, []);
+
+  // Load lobby data from storage
   useEffect(() => {
     const loadLobby = async () => {
       if (id) {
@@ -32,6 +54,36 @@ export default function Game() {
     };
     loadLobby();
   }, [id]);
+
+  // Find a random song from Jamendo
+  useEffect(() => {
+    const getRandomSong = async () => {
+      try {
+        // Fetch a random track from Jamendo
+        const response = await fetch(
+          `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&id=2044063`
+        );
+
+        if (!response.ok) {
+          console.error("Jamendo fetch error:", response.status);
+          return;
+        }
+
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const song = data.results[0];
+          console.log("Random Jamendo track:", song.audio);
+          setTrackUrl(song.audio);
+          setTrackName(song.name);
+          setAlbumCover(song.album_image);
+        }
+      } catch (err) {
+        console.error("Jamendo fetch error:", err);
+      }
+    };
+
+    getRandomSong();
+  }, []);
 
   const handleLeaveGame = async () => {
     if (!lobby || !currentUserId) return;
@@ -64,25 +116,22 @@ export default function Game() {
 
         <Text style={styles.pageTitle}>Listen And Repeat</Text>
 
-        <Text style={styles.smallerText}>Song name that is playing</Text>
+        <Text style={styles.smallerText}>{trackName}</Text>
 
-        <View style={styles.songOptionsContainer}>
-          <Feather
-            name="mic"
-            size={50}
-            color="#f1ededfa"
-            style={styles.sideIcon}
+        {albumCover && (
+          <Image
+            source={{ uri: albumCover }}
+            style={{
+              width: 240,
+              height: 240,
+              alignSelf: "center",
+              marginTop: 20,
+              borderRadius: 12,
+            }}
           />
+        )}
 
-          <MusicPlayer />
-
-          <Feather
-            name="refresh-ccw"
-            size={50}
-            color="#f1ededfa"
-            style={styles.sideIcon}
-          />
-        </View>
+        {trackUrl && <MusicPlayer audioUrl={trackUrl} />}
       </ImageBackground>
     </View>
   );
