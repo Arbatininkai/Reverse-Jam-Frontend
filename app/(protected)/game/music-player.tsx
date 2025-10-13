@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface MusicPlayerProps {
-  audioUrl: string;
+  audioUrl: any;
 }
 
 export default function MusicPlayer({ audioUrl }: MusicPlayerProps) {

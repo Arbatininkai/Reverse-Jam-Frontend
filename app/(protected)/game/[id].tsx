@@ -1,5 +1,6 @@
 import { AuthContext } from "@/context/AuthContext";
 import { styles } from "@/styles/styles";
+import tracks from "@/tracks";
 import { Storage } from "@/utils/utils";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -21,9 +22,7 @@ export default function Game() {
   const { id } = useGlobalSearchParams<{ id: string }>();
 
   const [lobby, setLobby] = useState<any>(null);
-  const [trackUrl, setTrackUrl] = useState<string | null>(null);
-  const [trackName, setTrackName] = useState<string>("");
-  const [albumCover, setAlbumCover] = useState<string | null>(null);
+  const [track, setTrack] = useState<any>(null);
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
@@ -55,34 +54,13 @@ export default function Game() {
     loadLobby();
   }, [id]);
 
-  // Find a random song from Jamendo
+  // Load a local track (random or first)
   useEffect(() => {
-    const getRandomSong = async () => {
-      try {
-        // Fetch a random track from Jamendo
-        const response = await fetch(
-          `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&id=2044063`
-        );
-
-        if (!response.ok) {
-          console.error("Jamendo fetch error:", response.status);
-          return;
-        }
-
-        const data = await response.json();
-        if (data.results && data.results.length > 0) {
-          const song = data.results[0];
-          console.log("Random Jamendo track:", song.audio);
-          setTrackUrl(song.audio);
-          setTrackName(song.name);
-          setAlbumCover(song.album_image);
-        }
-      } catch (err) {
-        console.error("Jamendo fetch error:", err);
-      }
-    };
-
-    getRandomSong();
+    if (tracks && tracks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * tracks.length);
+      console.log(tracks);
+      setTrack(tracks[randomIndex]);
+    }
   }, []);
 
   const handleLeaveGame = async () => {
@@ -116,22 +94,24 @@ export default function Game() {
 
         <Text style={styles.pageTitle}>Listen And Repeat</Text>
 
-        <Text style={styles.smallerText}>{trackName}</Text>
+        {track && (
+          <>
+            <Text style={styles.smallerText}>{track.title}</Text>
 
-        {albumCover && (
-          <Image
-            source={{ uri: albumCover }}
-            style={{
-              width: 240,
-              height: 240,
-              alignSelf: "center",
-              marginTop: 20,
-              borderRadius: 12,
-            }}
-          />
+            <Image
+              source={track.albumCover}
+              style={{
+                width: 240,
+                height: 240,
+                alignSelf: "center",
+                marginTop: 20,
+                borderRadius: 12,
+              }}
+            />
+
+            <MusicPlayer audioUrl={track.reversedAudio} />
+          </>
         )}
-
-        {trackUrl && <MusicPlayer audioUrl={trackUrl} />}
       </ImageBackground>
     </View>
   );
