@@ -108,6 +108,7 @@ export default function MusicPlayer({ audioUrl }: MusicPlayerProps) {
           maximumValue={duration}
           value={position}
           onSlidingComplete={handleSeek}
+          thumbTintColor="#ee2121ff"
           minimumTrackTintColor="#ee2121ff"
           maximumTrackTintColor="#fff"
           style={{ width: "60%", alignSelf: "center", marginTop: 20 }}

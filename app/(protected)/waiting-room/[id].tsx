@@ -2,8 +2,9 @@ import { AuthContext } from "@/context/AuthContext";
 import { createStyles } from "@/styles/createStyles";
 import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
+import * as signalR from "@microsoft/signalr";
 import { useGlobalSearchParams, useRouter } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Image,
   ImageBackground,
@@ -26,13 +27,20 @@ export default function Waiting() {
   const tokenId = user?.token;
   const currentUserId = user?.id;
 
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+
   useEffect(() => {
     const loadLobby = async () => {
       if (id) {
         const stored = await Storage.getItem(`lobby-${id}`);
         if (stored) {
           try {
-            setLobby(JSON.parse(stored));
+            const parsed = JSON.parse(stored);
+            setLobby(parsed);
+            // Connect to SignalR
+            if (parsed.lobbyCode) {
+              connectToLobby(parsed.lobbyCode);
+            }
           } catch {
             console.warn("Failed to parse stored lobby data");
           }
@@ -40,12 +48,76 @@ export default function Waiting() {
       }
     };
     loadLobby();
+
+    // When someone leaves the lobby, close the connection
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.stop();
+      }
+    };
   }, [id]);
 
   const API_BASE_URL =
     Platform.OS === "android"
       ? process.env.EXPO_PUBLIC_ANDROID_URL
       : process.env.EXPO_PUBLIC_BASE_URL;
+
+  const connectToLobby = async (lobbyCode: string) => {
+    if (!tokenId || !lobbyCode) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_BASE_URL}/lobbyHub`, {
+        accessTokenFactory: () => tokenId!,
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on("JoinedLobby", (lobbyData: any) => {
+      console.log("JoinedLobby:", lobbyData);
+      setLobby(lobbyData);
+      Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
+    });
+
+    // change type to User later
+    connection.on("PlayerJoined", (newPlayer: any) => {
+      console.log("Player joined:", newPlayer);
+      setLobby((prev: any) => {
+        if (!prev) return prev;
+        if (prev.players.some((p: any) => p.id === newPlayer.id)) return prev;
+        return { ...prev, players: [...prev.players, newPlayer] };
+      });
+    });
+
+    connection.on("PlayerLeft", (player: any) => {
+      console.log("Player left:", player);
+      setLobby((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          players: prev.players.filter((p: any) => p.id !== player.id),
+        };
+      });
+    });
+
+    connection.on("Error", (message: string) => {
+      console.error("SignalR Error:", message);
+    });
+
+    connection.on("LobbyDeleted", () => {
+      console.log("Lobby was deleted by the owner");
+      connection.stop();
+      router.replace("/");
+    });
+
+    try {
+      await connection.start();
+      console.log("Connected to SignalR hub");
+      await connection.invoke("JoinLobby", lobbyCode);
+      connectionRef.current = connection;
+    } catch (err) {
+      console.error("Failed to connect to SignalR:", err);
+    }
+  };
 
   const deleteLobby = async () => {
     await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
@@ -58,6 +130,7 @@ export default function Waiting() {
     });
 
     await Storage.removeItem(`lobby-${id}`);
+    await connectionRef.current?.stop();
     router.replace("/");
   };
 

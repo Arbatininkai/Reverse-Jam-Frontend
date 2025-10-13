@@ -7,7 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "arbatininkai",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -25,7 +29,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.Arbatininkai"
+      "package": "com.anonymous.Arbatininkai",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "static",
@@ -52,10 +62,18 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": { "root": "app" },
+      "router": {
+        "root": "app"
+      },
       "eas": {
         "projectId": "80e1b355-30d4-4948-919b-08a6429a94ac"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/80e1b355-30d4-4948-919b-08a6429a94ac"
     }
   }
 }
