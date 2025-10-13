@@ -49,11 +49,10 @@
       "expo-audio"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": { "root": "app" },
       "eas": {
         "projectId": "80e1b355-30d4-4948-919b-08a6429a94ac"
       }

@@ -1,6 +1,6 @@
 import { styles } from "@/styles/styles";
 import { AntDesign, Feather } from "@expo/vector-icons";
-import { Slider } from "@rneui/base";
+import Slider from "@react-native-community/slider";
 import { useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -108,7 +108,6 @@ export default function MusicPlayer({ audioUrl }: MusicPlayerProps) {
           maximumValue={duration}
           value={position}
           onSlidingComplete={handleSeek}
-          thumbStyle={{ height: 20, width: 20 }}
           minimumTrackTintColor="#ee2121ff"
           maximumTrackTintColor="#fff"
           style={{ width: "60%", alignSelf: "center", marginTop: 20 }}

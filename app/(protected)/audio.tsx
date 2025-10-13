@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Slider } from "@rneui/themed";
+import Slider from "@react-native-community/slider";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
@@ -35,7 +35,6 @@ export default function Audio() {
               onValueChange={(v) => setValue(v)}
               maximumValue={100}
               minimumValue={0}
-              thumbStyle={{ height: 20, width: 20 }}
               minimumTrackTintColor="#FFFFFF"
               maximumTrackTintColor="#000000"
               thumbTintColor="#6121afff"
