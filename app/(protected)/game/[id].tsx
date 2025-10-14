@@ -1,23 +1,43 @@
 import { AuthContext } from "@/context/AuthContext";
 import { styles } from "@/styles/styles";
+import tracks from "@/tracks";
 import { Storage } from "@/utils/utils";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import Entypo from "@expo/vector-icons/Entypo";
-import Feather from "@expo/vector-icons/Feather";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
-import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
+import {
+  BackHandler,
+  Image,
+  ImageBackground,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MusicPlayer from "./music-player";
+
+const JAMENDO_CLIENT_ID = "80fcf0c2";
 
 export default function Game() {
   const router = useRouter();
   const { id } = useGlobalSearchParams<{ id: string }>();
 
   const [lobby, setLobby] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [track, setTrack] = useState<any>(null);
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
 
+  // Make it so that the user cannot swipe back to the previous page
+  useEffect(() => {
+    const backHandler = () => true; // block hardware back
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backHandler
+    );
+    return () => subscription.remove();
+  }, []);
+
+  // Load lobby data from storage
   useEffect(() => {
     const loadLobby = async () => {
       if (id) {
@@ -33,6 +53,15 @@ export default function Game() {
     };
     loadLobby();
   }, [id]);
+
+  // Load a local track (random or first)
+  useEffect(() => {
+    if (tracks && tracks.length > 0) {
+      const randomIndex = Math.floor(Math.random() * tracks.length);
+      console.log(tracks);
+      setTrack(tracks[randomIndex]);
+    }
+  }, []);
 
   const handleLeaveGame = async () => {
     if (!lobby || !currentUserId) return;
@@ -65,41 +94,24 @@ export default function Game() {
 
         <Text style={styles.pageTitle}>Listen And Repeat</Text>
 
-        <Text style={styles.smallerText}>Song name that is playing</Text>
+        {track && (
+          <>
+            <Text style={styles.smallerText}>{track.title}</Text>
 
-        <View style={styles.songOptionsContainer}>
-          <Feather
-            name="mic"
-            size={50}
-            color="#f1ededfa"
-            style={styles.sideIcon}
-          />
+            <Image
+              source={track.albumCover}
+              style={{
+                width: 240,
+                height: 240,
+                alignSelf: "center",
+                marginTop: 20,
+                borderRadius: 12,
+              }}
+            />
 
-          <TouchableOpacity onPress={() => setIsPlaying(!isPlaying)}>
-            {isPlaying ? (
-              <AntDesign
-                name="play-circle"
-                size={80}
-                color="#fff"
-                style={styles.middleIcon}
-              />
-            ) : (
-              <AntDesign
-                name="pause-circle"
-                size={80}
-                color="#fff"
-                style={styles.middleIcon}
-              />
-            )}
-          </TouchableOpacity>
-
-          <Feather
-            name="refresh-ccw"
-            size={50}
-            color="#f1ededfa"
-            style={styles.sideIcon}
-          />
-        </View>
+            <MusicPlayer audioUrl={track.reversedAudio} />
+          </>
+        )}
       </ImageBackground>
     </View>
   );

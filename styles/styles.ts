@@ -46,6 +46,16 @@ export const styles = StyleSheet.create({
     textShadowRadius: 4,
     marginTop: 30,
   },
+  smallestText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 4,
+    marginTop: 20,
+  },
   backgroundImage: {
     flex: 1,
     width: "100%",
