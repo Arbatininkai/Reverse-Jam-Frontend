@@ -74,8 +74,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           // Check if token is still valid
           if (decoded.exp > now) {
-            const user = JSON.parse(userStr);
+            const res = await fetch(`${API_BASE_URL}/api/auth/userinfo`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+              console.log("Failed to fetch user info, clearing storage");
+              await Storage.removeItem("token");
+              await Storage.removeItem("user");
+              return;
+            }
+            const user = await res.json();
             setUser({ ...user, token });
+            await Storage.setItem("user", JSON.stringify(user));
             setIsLoggedIn(true);
             router.replace("/main");
             console.log("Restored user:", user);

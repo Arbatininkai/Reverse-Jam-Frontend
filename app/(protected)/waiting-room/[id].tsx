@@ -1,10 +1,10 @@
 import { AuthContext } from "@/context/AuthContext";
+import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
-import * as signalR from "@microsoft/signalr";
-import { useGlobalSearchParams, useRouter } from "expo-router";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
+import { useContext, useEffect } from "react";
 import {
   Image,
   ImageBackground,
@@ -18,43 +18,40 @@ import { styles } from "../../../styles/styles";
 
 export default function Waiting() {
   const router = useRouter();
-
+  const pathname = usePathname();
   const { id } = useGlobalSearchParams<{ id: string }>();
-
-  const [lobby, setLobby] = useState<any>(null);
-
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
-  const currentUserId = user?.id;
 
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const {
+    connectionRef,
+    connectToLobby,
+    leaveLobby,
+    startGame,
+    lobby,
+    setLobby,
+  } = useSignalR();
 
   useEffect(() => {
     const loadLobby = async () => {
-      if (id) {
-        const stored = await Storage.getItem(`lobby-${id}`);
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            setLobby(parsed);
-            // Connect to SignalR
-            if (parsed.lobbyCode) {
-              connectToLobby(parsed.lobbyCode);
-            }
-          } catch {
-            console.warn("Failed to parse stored lobby data");
-          }
+      if (!id) return;
+      const stored = await Storage.getItem(`lobby-${id}`);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored);
+      setLobby(parsed);
+
+      // Connect only if not already connected and we have the lobbyCode
+      if (parsed.lobbyCode && !connectionRef.current) {
+        try {
+          await connectToLobby(parsed.lobbyCode, tokenId);
+        } catch (err) {
+          console.error("Failed to connect to lobby:", err);
         }
       }
     };
-    loadLobby();
 
-    // When someone leaves the lobby, close the connection
-    return () => {
-      if (connectionRef.current) {
-        connectionRef.current.stop();
-      }
-    };
+    loadLobby();
   }, [id]);
 
   const API_BASE_URL =
@@ -62,76 +59,29 @@ export default function Waiting() {
       ? process.env.EXPO_PUBLIC_ANDROID_URL
       : process.env.EXPO_PUBLIC_BASE_URL;
 
-  const connectToLobby = async (lobbyCode: string) => {
-    if (!tokenId || !lobbyCode) return;
-
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/lobbyHub`, {
-        accessTokenFactory: () => tokenId!,
-      })
-      .withAutomaticReconnect()
-      .build();
-
-    connection.on("JoinedLobby", (lobbyData: any) => {
-      console.log("JoinedLobby:", lobbyData);
-      setLobby(lobbyData);
-      Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
-    });
-
-    // change type to User later
-    connection.on("PlayerJoined", (newPlayer: any) => {
-      console.log("Player joined:", newPlayer);
-      setLobby((prev: any) => {
-        if (!prev) return prev;
-        if (prev.players.some((p: any) => p.id === newPlayer.id)) return prev;
-        return { ...prev, players: [...prev.players, newPlayer] };
-      });
-    });
-
-    connection.on("PlayerLeft", (player: any) => {
-      console.log("Player left:", player);
-      setLobby((prev: any) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          players: prev.players.filter((p: any) => p.id !== player.id),
-        };
-      });
-    });
-
-    connection.on("Error", (message: string) => {
-      console.error("SignalR Error:", message);
-    });
-
-    connection.on("LobbyDeleted", () => {
-      console.log("Lobby was deleted by the owner");
-      connection.stop();
-      router.replace("/");
-    });
-
+  const handleDeleteLobby = async () => {
     try {
-      await connection.start();
-      console.log("Connected to SignalR hub");
-      await connection.invoke("JoinLobby", lobbyCode);
-      connectionRef.current = connection;
+      const response = await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenId}`,
+        },
+        body: JSON.stringify(id),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to delete lobby:", errorText);
+      }
+      await Storage.removeItem(`lobby-${id}`);
     } catch (err) {
-      console.error("Failed to connect to SignalR:", err);
+      console.error("Error deleting lobby:", err);
     }
   };
 
-  const deleteLobby = async () => {
-    await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${tokenId}`,
-      },
-      body: JSON.stringify({ lobbyId: id }),
-    });
-
-    await Storage.removeItem(`lobby-${id}`);
-    await connectionRef.current?.stop();
-    router.replace("/");
+  const handleLeaveLobby = async () => {
+    await leaveLobby(Number(id));
+    if (pathname !== "/" && lobby?.players?.length !== 1) router.replace("/");
   };
 
   return (
@@ -143,11 +93,14 @@ export default function Waiting() {
       >
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={
+            lobby?.players?.length === 1 ? handleDeleteLobby : handleLeaveLobby
+          }
         >
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
+
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
@@ -159,7 +112,6 @@ export default function Waiting() {
           <Text style={createStyles.title}>Waiting Room</Text>
 
           <Text style={styles.smallerText}>Seed:</Text>
-
           <View style={createStyles.seedWrapper}>
             <View style={styles.button}>
               <Text style={styles.buttonText}>
@@ -169,7 +121,6 @@ export default function Waiting() {
           </View>
 
           <Text style={styles.smallerText}>List of Players</Text>
-
           <Text style={styles.smallerText}>
             Player Count: {lobby?.players?.length || 0}/{lobby?.maxPlayers || 4}
           </Text>
@@ -178,7 +129,7 @@ export default function Waiting() {
             {lobby?.players?.map((player: any) => (
               <View key={player.id} style={createStyles.playerContainer}>
                 <Image
-                  source={{ uri: player.pholoUrl || player.photoUrl }}
+                  source={{ uri: player.photoUrl || player.pholoUrl }}
                   style={createStyles.playerIcon}
                 />
                 <Text style={createStyles.playerName}>{player.name}</Text>
@@ -186,28 +137,27 @@ export default function Waiting() {
             ))}
           </View>
 
-          {/* The first user added to the lobby will be the creator and will be able to delete the lobby */}
-          {currentUserId === lobby?.players?.[0]?.id && (
+          {lobby?.ownerId === user?.id && (
             <View style={createStyles.createButtonWrapper}>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={deleteLobby}
+                onPress={handleDeleteLobby}
               >
                 <Text style={styles.deleteText}>Delete Lobby</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          <View style={createStyles.createButtonWrapper}>
-            <TouchableOpacity
-              onPress={() => {
-                router.replace(`../game/${id}`);
-              }}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>Start Game</Text>
-            </TouchableOpacity>
-          </View>
+          {lobby?.ownerId === user?.id && (
+            <View style={createStyles.createButtonWrapper}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => startGame(Number(id))}
+              >
+                <Text style={styles.buttonText}>Start Game</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       </ImageBackground>
     </View>
