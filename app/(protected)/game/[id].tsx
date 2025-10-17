@@ -1,6 +1,6 @@
 import { AuthContext } from "@/context/AuthContext";
+import { useSignalR } from "@/context/SignalRContext";
 import { styles } from "@/styles/styles";
-import tracks from "@/tracks";
 import { Storage } from "@/utils/utils";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useGlobalSearchParams, useRouter } from "expo-router";
@@ -9,13 +9,17 @@ import {
   BackHandler,
   Image,
   ImageBackground,
+  Platform,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import MusicPlayer from "./music-player";
 
-const JAMENDO_CLIENT_ID = "80fcf0c2";
+const API_BASE_URL =
+  Platform.OS === "android"
+    ? process.env.EXPO_PUBLIC_ANDROID_URL
+    : process.env.EXPO_PUBLIC_BASE_URL;
 
 export default function Game() {
   const router = useRouter();
@@ -26,6 +30,9 @@ export default function Game() {
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
+  const tokenId = user?.token;
+
+  const { leaveLobby, lobby: signalRLobby } = useSignalR();
 
   // Make it so that the user cannot swipe back to the previous page
   useEffect(() => {
@@ -39,43 +46,59 @@ export default function Game() {
 
   // Load lobby data from storage
   useEffect(() => {
-    const loadLobby = async () => {
-      if (id) {
-        const stored = await Storage.getItem(`lobby-${id}`);
-        if (stored) {
-          try {
-            setLobby(JSON.parse(stored));
-          } catch {
-            console.warn("Failed to parse stored lobby data");
-          }
-        }
+    if (signalRLobby) {
+      setLobby(signalRLobby);
+      Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
+    }
+  }, [signalRLobby]);
+
+  // Load selected song
+  useEffect(() => {
+    const loadSong = async () => {
+      const storedSong = await Storage.getItem(`song-${id}`);
+      if (storedSong) {
+        setTrack(JSON.parse(storedSong));
       }
     };
-    loadLobby();
+    loadSong();
   }, [id]);
 
-  // Load a local track (random or first)
-  useEffect(() => {
-    if (tracks && tracks.length > 0) {
-      const randomIndex = Math.floor(Math.random() * tracks.length);
-      console.log(tracks);
-      setTrack(tracks[randomIndex]);
+  const handleDeleteLobby = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenId}`,
+        },
+        body: JSON.stringify(id),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to delete lobby:", errorText);
+      }
+      await Storage.removeItem(`song-${id}`);
+      await Storage.removeItem(`lobby-${id}`);
+    } catch (err) {
+      console.error("Error deleting lobby:", err);
     }
-  }, []);
+  };
 
   const handleLeaveGame = async () => {
-    if (!lobby || !currentUserId) return;
+    if (!signalRLobby || !currentUserId) return;
 
-    // Remove the current user from the players list
-    const updatedPlayers = lobby.players.filter(
-      (player: any) => player.id !== currentUserId
-    );
+    // Remove player via SignalR
+    try {
+      await leaveLobby(Number(id));
+      console.log("SignalR LeaveLobby invoked from Game screen");
+    } catch (err) {
+      console.error("Error calling LeaveLobby:", err);
+    }
 
-    // Update lobby
-    const updatedLobby = { ...lobby, players: updatedPlayers };
-
-    setLobby(updatedLobby);
-    await Storage.setItem(`lobby-${id}`, JSON.stringify(updatedLobby));
+    // Only delete lobby if last player
+    if (signalRLobby.players.length < 1) {
+      await handleDeleteLobby();
+    }
 
     router.replace("../main");
   };
@@ -87,19 +110,25 @@ export default function Game() {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <TouchableOpacity style={styles.backButton} onPress={handleLeaveGame}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={
+            lobby?.players?.length === 1 ? handleDeleteLobby : handleLeaveGame
+          }
+        >
           <Entypo name="cross" size={30} color="#ee2121ff" />
           <Text style={styles.leaveText}>Leave Game</Text>
         </TouchableOpacity>
 
-        <Text style={styles.pageTitle}>Listen And Repeat</Text>
+        <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
 
         {track && (
           <>
-            <Text style={styles.smallerText}>{track.title}</Text>
+            <Text style={styles.smallerText}>{track.artist}</Text>
+            <Text style={styles.smallerText}>{track.name}</Text>
 
             <Image
-              source={track.albumCover}
+              source={{ uri: track.coverUrl }}
               style={{
                 width: 240,
                 height: 240,
@@ -109,7 +138,7 @@ export default function Game() {
               }}
             />
 
-            <MusicPlayer audioUrl={track.reversedAudio} />
+            <MusicPlayer audioUrl={track.url} />
           </>
         )}
       </ImageBackground>

@@ -1,4 +1,5 @@
 import { AuthContext } from "@/context/AuthContext";
+import { SignalRProvider } from "@/context/SignalRContext";
 import { Stack, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 
@@ -19,13 +20,15 @@ export default function ProtectedLayout() {
   }, [auth?.isLoggedIn, isMounted]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: "#333333" },
-        headerTintColor: "white",
-        headerTitleStyle: { fontWeight: "bold" },
-        headerShown: false,
-      }}
-    />
+    <SignalRProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: "#333333" },
+          headerTintColor: "white",
+          headerTitleStyle: { fontWeight: "bold" },
+          headerShown: false,
+        }}
+      />
+    </SignalRProvider>
   );
 }

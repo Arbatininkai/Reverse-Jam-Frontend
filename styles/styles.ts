@@ -25,6 +25,7 @@ export const styles = StyleSheet.create({
     textShadowColor: "#000",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
+    marginTop: 20,
   },
   jam: {
     color: "#FFC62B",
@@ -95,7 +96,7 @@ export const styles = StyleSheet.create({
   },
   songOptionsContainer: {
     flexDirection: "row",
-    justifyContent: "center", // center all icons
+    justifyContent: "center",
     alignItems: "center",
     width: width > 600 ? "50%" : "80%",
     alignSelf: "center",
@@ -158,6 +159,12 @@ export const styles = StyleSheet.create({
     color: "#fc1a1aff",
     fontWeight: "bold",
     fontSize: 25,
+  },
+  errorText: {
+    color: "#fc1a1aff",
+    fontWeight: "bold",
+    fontSize: 25,
+    paddingBottom: 20,
   },
   deleteButton: {
     backgroundColor: "#983A3A",
