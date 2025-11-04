@@ -66,6 +66,14 @@ export const createStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
+  bigPlayerIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#fff",
+    alignSelf: "center",
+  },
   option: {
     flexDirection: "row",
     alignItems: "center",

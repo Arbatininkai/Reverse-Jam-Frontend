@@ -3,6 +3,13 @@ import { useSignalR } from "@/context/SignalRContext";
 import { styles } from "@/styles/styles";
 import { Storage } from "@/utils/utils";
 import Entypo from "@expo/vector-icons/Entypo";
+import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -10,11 +17,13 @@ import {
   Image,
   ImageBackground,
   Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import MusicPlayer from "./music-player";
+import RecordingPlayer from "./recording-player";
 
 const API_BASE_URL =
   Platform.OS === "android"
@@ -27,6 +36,10 @@ export default function Game() {
 
   const [lobby, setLobby] = useState<any>(null);
   const [track, setTrack] = useState<any>(null);
+
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
+  const [recordedUri, setRecordedUri] = useState<string | null>(null);
 
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
@@ -87,7 +100,6 @@ export default function Game() {
   const handleLeaveGame = async () => {
     if (!signalRLobby || !currentUserId) return;
 
-    // Remove player via SignalR
     try {
       await leaveLobby(Number(id));
       console.log("SignalR LeaveLobby invoked from Game screen");
@@ -101,6 +113,60 @@ export default function Game() {
     }
 
     router.replace("../main");
+  };
+
+  const startRecording = async () => {
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
+  };
+
+  const stopRecording = async () => {
+    await audioRecorder.stop();
+    const uri = audioRecorder.uri;
+    if (uri) setRecordedUri(uri);
+  };
+
+  useEffect(() => {
+    (async () => {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        console.log("Permission to access microphone was denied");
+      }
+
+      setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: true,
+      });
+    })();
+  }, []);
+
+  const submitRecording = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("File", {
+        uri: recordedUri,
+        name: `recording-${Date.now()}.m4a`,
+        type: "audio/m4a",
+      } as any);
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/Recordings/upload/${id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokenId}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) throw new Error("Upload failed:  " + response.text());
+      const data = await response.json();
+      console.log("Uploaded recording:", data);
+      router.replace(`../game/listening-room?id=${id}`);
+    } catch (err) {
+      console.error("Error uploading recording:", err);
+    }
   };
 
   return (
@@ -120,27 +186,59 @@ export default function Game() {
           <Text style={styles.leaveText}>Leave Game</Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 40,
+            alignItems: "center",
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
 
-        {track && (
-          <>
-            <Text style={styles.smallerText}>{track.artist}</Text>
-            <Text style={styles.smallerText}>{track.name}</Text>
+          {track && (
+            <>
+              <Text style={styles.smallerText}>{track.artist}</Text>
+              <Text style={styles.smallerText}>{track.name}</Text>
 
-            <Image
-              source={{ uri: track.coverUrl }}
-              style={{
-                width: 240,
-                height: 240,
-                alignSelf: "center",
-                marginTop: 20,
-                borderRadius: 12,
-              }}
-            />
+              <Image
+                source={{ uri: track.coverUrl }}
+                style={{
+                  width: 240,
+                  height: 240,
+                  alignSelf: "center",
+                  marginTop: 20,
+                  borderRadius: 12,
+                }}
+              />
 
-            <MusicPlayer audioUrl={track.url} />
-          </>
-        )}
+              <MusicPlayer
+                audioUrl={track.url}
+                recorderState={recorderState}
+                startRecording={startRecording}
+                stopRecording={stopRecording}
+                recordedUri={recordedUri}
+              />
+
+              <Text style={styles.smallestText}>
+                {recordedUri
+                  ? "Your recording"
+                  : "Click on the microphone icon to start recording."}
+              </Text>
+
+              {recordedUri && <RecordingPlayer uri={recordedUri} />}
+
+              {recordedUri && (
+                <TouchableOpacity
+                  onPress={submitRecording}
+                  style={styles.button}
+                >
+                  <Text style={styles.buttonText}>Submit Recording</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </ScrollView>
       </ImageBackground>
     </View>
   );

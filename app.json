@@ -7,11 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "arbatininkai",
     "userInterfaceStyle": "automatic",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -56,7 +52,12 @@
         }
       ],
       "expo-web-browser",
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow user to access your microphone."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

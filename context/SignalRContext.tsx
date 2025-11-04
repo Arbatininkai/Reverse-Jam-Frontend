@@ -111,6 +111,12 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     });
 
+    connection.on("LobbyUpdated", (lobbyData: any) => {
+      console.log("Lobby updated:", lobbyData);
+      setLobby(lobbyData);
+      Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
+    });
+
     connection.on("GameStarted", (lobbyId: number, song: any) => {
       console.log("Game started for lobby:", lobbyId, "Song:", song);
       Storage.setItem(`song-${lobbyId}`, JSON.stringify(song));
