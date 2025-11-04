@@ -3,8 +3,9 @@ import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Image,
   ImageBackground,
@@ -22,6 +23,8 @@ export default function Waiting() {
   const { id } = useGlobalSearchParams<{ id: string }>();
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
+
+  const [totalRounds, setTotalRounds] = useState("1");
 
   const {
     connectionRef,
@@ -136,6 +139,27 @@ export default function Waiting() {
               </View>
             ))}
           </View>
+
+          {lobby?.ownerId === user?.id && (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={styles.smallerText}>Total Rounds:</Text>
+              <Picker
+                selectedValue={totalRounds}
+                style={{ height: 50, width: 100 }}
+                onValueChange={(itemValue) => setTotalRounds(itemValue)}
+              >
+                <Picker.Item label="1" value="1" />
+                <Picker.Item label="2" value="2" />
+                <Picker.Item label="3" value="3" />
+              </Picker>
+            </View>
+          )}
 
           {lobby?.ownerId === user?.id && (
             <View style={createStyles.createButtonWrapper}>
