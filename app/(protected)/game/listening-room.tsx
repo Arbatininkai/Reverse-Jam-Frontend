@@ -27,55 +27,41 @@ export default function ListeningRoom() {
   const tokenId = user?.token;
 
   const { id } = useLocalSearchParams();
-
   const router = useRouter();
+
   const [lobby, setLobby] = useState<any>(null);
   const [recordings, setRecordings] = useState<any[]>([]);
+  const { leaveLobby, lobby: signalRLobby, nextPlayer } = useSignalR();
 
-  const { leaveLobby, lobby: signalRLobby } = useSignalR();
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const playerCount = lobby?.players?.length || 0;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [initialPlayerCount, setInitialPlayerCount] = useState<number>(0);
+  const totalRounds = lobby?.totalRounds || 1;
 
-  const nextPlayer = () => {
-    if (currentIndex === playerCount - 1) return;
-    setCurrentIndex((prev) => (prev + 1) % lobby.players.length);
-    console.log("Current recodings: ", currentRecording);
-  };
-
+  // Compute current player and their recording for this round
   const currentPlayer = lobby?.players?.[currentIndex];
+  const currentRound = lobby?.currentRound || 0;
   const currentRecording = recordings.find(
-    (r) => r.userId === currentPlayer?.id
+    (r) => r.userId === currentPlayer?.id && r.round === currentRound + 1
   );
+
+  const allRecordingsReady = recordings.length === playerCount * totalRounds;
 
   useEffect(() => {
     if (signalRLobby) {
       setLobby(signalRLobby);
-      console.log("New lobby: ", lobby);
-      if (initialPlayerCount === 0 && signalRLobby.players) {
-        setInitialPlayerCount(signalRLobby.players.length);
-      }
 
-      setCurrentIndex((prevIndex) => {
-        const players = signalRLobby.players || [];
-        if (players.length === 0) return 0;
-
-        // if current player not found in updated lobby, shift index
-        const current = players[prevIndex];
-        if (!current) {
-          return prevIndex >= players.length ? 0 : prevIndex % players.length;
-        }
-        return prevIndex;
-      });
       Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
+
+      // Reset indexes if lobby changed
+      setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
   }, [signalRLobby]);
 
   useEffect(() => {
     if (!lobby) return;
 
-    const getRecordings = async () => {
+    const fetchRecordings = async () => {
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/Recordings/${lobby.lobbyCode}/recordings`,
@@ -89,15 +75,31 @@ export default function ListeningRoom() {
 
         if (!response.ok) throw new Error(await response.text());
         const files = await response.json();
-        console.log("Files: ", files);
         setRecordings(files);
       } catch (err) {
         console.error("Error fetching recordings:", err);
       }
     };
 
-    getRecordings();
+    fetchRecordings();
   }, [lobby]);
+
+  const handleLeaveGame = async () => {
+    if (!signalRLobby || !currentUserId) return;
+
+    try {
+      await leaveLobby(Number(id));
+    } catch (err) {
+      console.error("Error leaving lobby:", err);
+    }
+
+    if (signalRLobby.players.length < 1) {
+      await Storage.removeItem(`lobby-${id}`);
+      await Storage.removeItem(`song-${id}`);
+    }
+
+    router.replace("../main");
+  };
 
   const handleDeleteLobby = async () => {
     try {
@@ -120,24 +122,6 @@ export default function ListeningRoom() {
     }
   };
 
-  const handleLeaveGame = async () => {
-    if (!signalRLobby || !currentUserId) return;
-
-    try {
-      await leaveLobby(Number(id));
-      console.log("SignalR LeaveLobby invoked from Game screen");
-    } catch (err) {
-      console.error("Error calling LeaveLobby:", err);
-    }
-
-    // Only delete lobby if last player
-    if (signalRLobby.players.length < 1) {
-      await handleDeleteLobby();
-    }
-
-    router.replace("../main");
-  };
-
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -154,39 +138,55 @@ export default function ListeningRoom() {
           <Entypo name="cross" size={30} color="#ee2121ff" />
           <Text style={styles.leaveText}>Leave Game</Text>
         </TouchableOpacity>
+
         <Text style={styles.sectoinTitleText}>Listen To The Singers</Text>
-        {recordings.length !== initialPlayerCount ? (
+        <Text style={styles.sectoinTitleText}>
+          Round: {currentRound + 1} / {totalRounds}
+        </Text>
+
+        {!allRecordingsReady ? (
           <Text style={styles.sectoinTitleText}>
-            Waiting for other players so sumbit their recordings...
+            Waiting for all players to submit their recordings...
           </Text>
         ) : (
           <>
-            {currentPlayer && (
+            {currentPlayer && currentRecording && (
               <View style={styles.playerInfoContainer}>
                 <Text style={styles.smallerText}>
                   {currentPlayer.name} is singing
                 </Text>
                 <Image
-                  source={{
-                    uri: currentPlayer.photoUrl,
-                  }}
+                  source={{ uri: currentPlayer.photoUrl }}
                   style={createStyles.bigPlayerIcon}
                 />
                 <RecordingPlayer
-                  key={currentRecording?.url}
-                  title={currentRecording?.fileName}
-                  uri={currentRecording?.url}
+                  key={currentRecording.url}
+                  title={currentRecording.fileName}
+                  uri={currentRecording.url}
                 />
               </View>
             )}
 
-            <TouchableOpacity style={styles.button} onPress={nextPlayer}>
-              <Text style={styles.buttonText}>
-                {currentIndex !== playerCount - 1
-                  ? "Next Player"
-                  : "Submit Voting"}
-              </Text>
-            </TouchableOpacity>
+            {lobby?.ownerId === user?.id && (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                  if (
+                    lobby.currentRound !== lobby.totalRounds - 1 ||
+                    lobby.currentPlayerIndex !== lobby.players.length - 1
+                  ) {
+                    nextPlayer(Number(id));
+                  }
+                }}
+              >
+                <Text style={styles.buttonText}>
+                  {lobby.currentRound === lobby.totalRounds - 1 &&
+                  lobby.currentPlayerIndex === lobby.players.length - 1
+                    ? "Submit Voting"
+                    : "Next Player"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
       </ImageBackground>

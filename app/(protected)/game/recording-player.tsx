@@ -25,9 +25,9 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
         player.volume = 0;
         player.play();
         player.pause();
+        setIsPlaying(false);
         await player.seekTo(0);
         setIsAudioActiveAsync(false);
-        console.log("the audio was played    ");
 
         let tries = 0;
         while (tries < 20 && (!player.duration || player.duration === 0)) {

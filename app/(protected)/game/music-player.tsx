@@ -20,13 +20,42 @@ export default function MusicPlayer({
   stopRecording,
   recordedUri,
 }: MusicPlayerProps) {
-  const player = useAudioPlayer(audioUrl);
+  const player = useAudioPlayer(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const loadRecording = async () => {
+      if (!audioUrl || !player) return;
+      try {
+        setIsPlaying(false);
+        setPosition(0);
+        setIsReady(false);
+        player.loop = false;
+        await player.remove();
+        await player.replace({ uri: audioUrl });
+
+        player.volume = 0;
+        player.play();
+        player.pause();
+        await player.seekTo(0);
+        setIsAudioActiveAsync(false);
+
+        setIsReady(true);
+        player.volume = 1;
+        setIsAudioActiveAsync(true);
+      } catch (err) {
+        console.error("Failed to load audio:", err);
+      }
+    };
+    loadRecording();
+  }, [audioUrl, player]);
 
   // Update playback status
   useEffect(() => {
+    if (!player || !isReady) return;
     let mounted = true;
     const sub = player.addListener("playbackStatusUpdate", (status) => {
       if (!mounted) return;
@@ -45,7 +74,7 @@ export default function MusicPlayer({
       mounted = false;
       sub.remove();
     };
-  }, [player]);
+  }, [player, isReady]);
 
   // For smooth slide bar animation
   useEffect(() => {
@@ -92,6 +121,7 @@ export default function MusicPlayer({
       player.volume = 0;
       player.play();
       player.pause();
+      setIsPlaying(false);
       setIsAudioActiveAsync(false);
 
       await player.seekTo(seekTo);

@@ -35,7 +35,9 @@ export default function Game() {
   const { id } = useGlobalSearchParams<{ id: string }>();
 
   const [lobby, setLobby] = useState<any>(null);
-  const [track, setTrack] = useState<any>(null);
+  const [tracks, setTracks] = useState<any[]>([]);
+  const [currentTrack, setCurrentTrack] = useState<any>(null);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
@@ -68,9 +70,10 @@ export default function Game() {
   // Load selected song
   useEffect(() => {
     const loadSong = async () => {
-      const storedSong = await Storage.getItem(`song-${id}`);
-      if (storedSong) {
-        setTrack(JSON.parse(storedSong));
+      const storedSongs = await Storage.getItem(`song-${id}`);
+      if (storedSongs) {
+        setTracks(JSON.parse(storedSongs));
+        setCurrentTrack(JSON.parse(storedSongs)[0]);
       }
     };
     loadSong();
@@ -140,6 +143,11 @@ export default function Game() {
     })();
   }, []);
 
+  const nextSong = () => {
+    setCurrentTrack(tracks[currentTrackIndex + 1]);
+    setCurrentTrackIndex(currentTrackIndex + 1);
+  };
+
   const submitRecording = async () => {
     try {
       const formData = new FormData();
@@ -150,7 +158,7 @@ export default function Game() {
       } as any);
 
       const response = await fetch(
-        `${API_BASE_URL}/api/Recordings/upload/${id}`,
+        `${API_BASE_URL}/api/Recordings/upload/${id}/${currentTrackIndex}`,
         {
           method: "POST",
           headers: {
@@ -163,7 +171,14 @@ export default function Game() {
       if (!response.ok) throw new Error("Upload failed:  " + response.text());
       const data = await response.json();
       console.log("Uploaded recording:", data);
-      router.replace(`../game/listening-room?id=${id}`);
+
+      // If this is not the final song, go to the next one
+      if (currentTrackIndex !== signalRLobby.totalRounds - 1) {
+        nextSong();
+        setRecordedUri(null);
+      } else {
+        router.replace(`../game/listening-room?id=${id}`);
+      }
     } catch (err) {
       console.error("Error uploading recording:", err);
     }
@@ -196,13 +211,17 @@ export default function Game() {
         >
           <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
 
-          {track && (
+          <Text style={styles.sectoinTitleText}>
+            Round: {currentTrackIndex + 1}
+          </Text>
+
+          {currentTrack && (
             <>
-              <Text style={styles.smallerText}>{track.artist}</Text>
-              <Text style={styles.smallerText}>{track.name}</Text>
+              <Text style={styles.smallerText}>{currentTrack.artist}</Text>
+              <Text style={styles.smallerText}>{currentTrack.name}</Text>
 
               <Image
-                source={{ uri: track.coverUrl }}
+                source={{ uri: currentTrack.coverUrl }}
                 style={{
                   width: 240,
                   height: 240,
@@ -213,7 +232,8 @@ export default function Game() {
               />
 
               <MusicPlayer
-                audioUrl={track.url}
+                key={currentTrack.url}
+                audioUrl={currentTrack.url}
                 recorderState={recorderState}
                 startRecording={startRecording}
                 stopRecording={stopRecording}
@@ -233,7 +253,11 @@ export default function Game() {
                   onPress={submitRecording}
                   style={styles.button}
                 >
-                  <Text style={styles.buttonText}>Submit Recording</Text>
+                  <Text style={styles.buttonText}>
+                    {currentTrackIndex !== signalRLobby.totalRounds - 1
+                      ? "Next Track"
+                      : "Submit Recordings"}
+                  </Text>
                 </TouchableOpacity>
               )}
             </>

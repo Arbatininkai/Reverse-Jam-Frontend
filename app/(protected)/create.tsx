@@ -7,6 +7,7 @@ import { useContext, useState } from "react";
 import {
   ImageBackground,
   Platform,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -20,6 +21,8 @@ export default function Create() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [aiRate, setAiRate] = useState(true);
   const [humanRate, setHumanRate] = useState(false);
+
+  const [totalRounds, setTotalRounds] = useState(1);
 
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
@@ -41,6 +44,7 @@ export default function Create() {
           private: isPrivate,
           aiRate,
           humanRate,
+          totalRounds,
         }),
       });
 
@@ -74,64 +78,97 @@ export default function Create() {
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={createStyles.title}>Create Lobby</Text>
-
-        <Text style={createStyles.selectText}>Select Lobby Type</Text>
-
-        <RadioButton.Group
-          onValueChange={(newValue) => setIsPrivate(newValue === "private")}
-          value={isPrivate ? "private" : "public"}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 40,
+            alignItems: "center",
+          }}
+          showsVerticalScrollIndicator={false}
         >
+          <Text style={createStyles.title}>Create Lobby</Text>
+
+          <Text style={createStyles.selectText}>Select Lobby Type</Text>
+
+          <RadioButton.Group
+            onValueChange={(newValue) => setIsPrivate(newValue === "private")}
+            value={isPrivate ? "private" : "public"}
+          >
+            <View style={createStyles.containerBox}>
+              <View style={createStyles.option}>
+                <RadioButton
+                  value="public"
+                  color="#4CAF50"
+                  uncheckedColor="#ccc"
+                />
+                <Text style={createStyles.optionLabel}>Public</Text>
+              </View>
+
+              <View style={createStyles.option}>
+                <RadioButton
+                  value="private"
+                  color="#2196F3"
+                  uncheckedColor="#ccc"
+                />
+                <Text style={createStyles.optionLabel}>Private</Text>
+              </View>
+            </View>
+          </RadioButton.Group>
+
+          <Text style={createStyles.selectText}>Select Voting System</Text>
+
           <View style={createStyles.containerBox}>
             <View style={createStyles.option}>
-              <RadioButton
-                value="public"
-                color="#4CAF50"
+              <Checkbox
+                status={aiRate ? "checked" : "unchecked"}
+                onPress={() => setAiRate(!aiRate)}
+                color="#FF5722"
                 uncheckedColor="#ccc"
               />
-              <Text style={createStyles.optionLabel}>Public</Text>
+              <Text style={createStyles.optionLabel}>AI Score</Text>
             </View>
 
             <View style={createStyles.option}>
-              <RadioButton
-                value="private"
-                color="#2196F3"
+              <Checkbox
+                status={humanRate ? "checked" : "unchecked"}
+                onPress={() => setHumanRate(!humanRate)}
+                color="#f321a3ff"
                 uncheckedColor="#ccc"
               />
-              <Text style={createStyles.optionLabel}>Private</Text>
+              <Text style={createStyles.optionLabel}>People Vote</Text>
             </View>
           </View>
-        </RadioButton.Group>
 
-        <Text style={createStyles.selectText}>Select Voting System</Text>
+          <Text style={createStyles.selectText}>Select Round Amount</Text>
 
-        <View style={createStyles.containerBox}>
-          <View style={createStyles.option}>
-            <Checkbox
-              status={aiRate ? "checked" : "unchecked"}
-              onPress={() => setAiRate(!aiRate)}
-              color="#FF5722"
-              uncheckedColor="#ccc"
-            />
-            <Text style={createStyles.optionLabel}>AI Score</Text>
+          <RadioButton.Group
+            onValueChange={(newValue) => setTotalRounds(parseInt(newValue))}
+            value={totalRounds.toString()}
+          >
+            <View style={createStyles.numberBox}>
+              <View style={createStyles.option}>
+                <RadioButton value="1" color="#4CAF50" uncheckedColor="#ccc" />
+                <Text style={createStyles.optionLabel}>1</Text>
+              </View>
+
+              <View style={createStyles.option}>
+                <RadioButton value="2" color="#2196F3" uncheckedColor="#ccc" />
+                <Text style={createStyles.optionLabel}>2</Text>
+              </View>
+
+              <View style={createStyles.option}>
+                <RadioButton value="3" color="#FF9800" uncheckedColor="#ccc" />
+                <Text style={createStyles.optionLabel}>3</Text>
+              </View>
+            </View>
+          </RadioButton.Group>
+
+          <View style={createStyles.createButtonWrapper}>
+            <TouchableOpacity onPress={handleCreateLobby} style={styles.button}>
+              <Text style={styles.buttonText}>Create Lobby</Text>
+            </TouchableOpacity>
           </View>
-
-          <View style={createStyles.option}>
-            <Checkbox
-              status={humanRate ? "checked" : "unchecked"}
-              onPress={() => setHumanRate(!humanRate)}
-              color="#f321a3ff"
-              uncheckedColor="#ccc"
-            />
-            <Text style={createStyles.optionLabel}>People Vote</Text>
-          </View>
-        </View>
-
-        <View style={createStyles.createButtonWrapper}>
-          <TouchableOpacity onPress={handleCreateLobby} style={styles.button}>
-            <Text style={styles.buttonText}>Create Lobby</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </ImageBackground>
     </View>
   );
