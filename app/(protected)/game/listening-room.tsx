@@ -29,35 +29,34 @@ export default function ListeningRoom() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const [lobby, setLobby] = useState<any>(null);
+  const { leaveLobby, lobby, nextPlayer, currentRecording, currentPlayerId } =
+    useSignalR();
   const [recordings, setRecordings] = useState<any[]>([]);
-  const { leaveLobby, lobby: signalRLobby, nextPlayer } = useSignalR();
+  const [playerSnapshot, setPlayerSnapshot] = useState<any[]>([]);
+  const [initialPlayerCount, setInitialPlayerCount] = useState<number>(0);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const playerCount = lobby?.players?.length || 0;
   const totalRounds = lobby?.totalRounds || 1;
-
-  // Compute current player and their recording for this round
-  const currentPlayer = lobby?.players?.[currentIndex];
   const currentRound = lobby?.currentRound || 0;
-  const currentRecording = recordings.find(
-    (r) => r.userId === currentPlayer?.id && r.round === currentRound + 1
-  );
 
-  const allRecordingsReady = recordings.length === playerCount * totalRounds;
+  const allRecordingsReady =
+    recordings.length === initialPlayerCount * totalRounds;
 
   useEffect(() => {
-    if (signalRLobby) {
-      setLobby(signalRLobby);
-
-      Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
-
-      // Reset indexes if lobby changed
-      setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
+    if (lobby && playerSnapshot.length === 0 && lobby.players?.length) {
+      setPlayerSnapshot(lobby.players);
+      setInitialPlayerCount(lobby.players.length);
     }
-  }, [signalRLobby]);
+    console.log("Id", currentPlayerId);
+    console.log("Current player", currentPlayer);
+    if (lobby) Storage.setItem(`lobby-${id}`, JSON.stringify(lobby));
+  }, [lobby]);
 
+  // Determine current player from snapshot by ID
+  const currentPlayer = currentPlayerId
+    ? playerSnapshot.find((p) => p.id === currentPlayerId) ?? null
+    : null;
+
+  // Fetch recordings whenever lobby changes
   useEffect(() => {
     if (!lobby) return;
 
@@ -67,9 +66,7 @@ export default function ListeningRoom() {
           `${API_BASE_URL}/api/Recordings/${lobby.lobbyCode}/recordings`,
           {
             method: "GET",
-            headers: {
-              Authorization: `Bearer ${tokenId}`,
-            },
+            headers: { Authorization: `Bearer ${tokenId}` },
           }
         );
 
@@ -85,15 +82,14 @@ export default function ListeningRoom() {
   }, [lobby]);
 
   const handleLeaveGame = async () => {
-    if (!signalRLobby || !currentUserId) return;
-
+    if (!lobby || !currentUserId) return;
     try {
       await leaveLobby(Number(id));
     } catch (err) {
       console.error("Error leaving lobby:", err);
     }
 
-    if (signalRLobby.players.length < 1) {
+    if (lobby.players.length < 1) {
       await Storage.removeItem(`lobby-${id}`);
       await Storage.removeItem(`song-${id}`);
     }
@@ -122,6 +118,21 @@ export default function ListeningRoom() {
     }
   };
 
+  // Move to next player (host only)
+  const handleNextPlayer = () => {
+    if (!currentPlayerId || !playerSnapshot.length) return;
+    const currentIndex = playerSnapshot.findIndex(
+      (p) => p.id === currentPlayerId
+    );
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < playerSnapshot.length) {
+      nextPlayer(Number(id)); // Notify using SignalR
+    } else {
+      console.log("End of round");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -132,7 +143,7 @@ export default function ListeningRoom() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={
-            lobby?.players?.length === 1 ? handleDeleteLobby : handleLeaveGame
+            playerSnapshot.length === 1 ? handleDeleteLobby : handleLeaveGame
           }
         >
           <Entypo name="cross" size={30} color="#ee2121ff" />
@@ -167,21 +178,15 @@ export default function ListeningRoom() {
               </View>
             )}
 
-            {lobby?.ownerId === user?.id && (
+            {lobby?.ownerId === user?.id && playerSnapshot.length > 0 && (
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => {
-                  if (
-                    lobby.currentRound !== lobby.totalRounds - 1 ||
-                    lobby.currentPlayerIndex !== lobby.players.length - 1
-                  ) {
-                    nextPlayer(Number(id));
-                  }
-                }}
+                onPress={handleNextPlayer}
               >
                 <Text style={styles.buttonText}>
-                  {lobby.currentRound === lobby.totalRounds - 1 &&
-                  lobby.currentPlayerIndex === lobby.players.length - 1
+                  {currentRound === totalRounds - 1 &&
+                  currentPlayerId ===
+                    playerSnapshot[playerSnapshot.length - 1].id
                     ? "Submit Voting"
                     : "Next Player"}
                 </Text>

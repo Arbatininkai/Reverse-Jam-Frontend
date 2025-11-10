@@ -9,51 +9,56 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  let didRun = false;
   const player = useAudioPlayer(undefined);
 
+  // Load recording whenever the URI changes
   useEffect(() => {
     const loadRecording = async () => {
+      if (didRun) return;
+      didRun = true;
+
       if (!recordedUri || !player) return;
+
       try {
+        setIsLoading(true);
+        setIsReady(false);
         setIsPlaying(false);
         setPosition(0);
-        setIsReady(false);
-        player.loop = false;
-        await player.remove();
-        await player.replace({ uri: recordedUri });
 
-        player.volume = 0;
-        player.play();
-        player.pause();
-        setIsPlaying(false);
+        // Remove any previously loaded audio
+        await player.remove();
+        player.loop = false;
+
+        // Replace with new recording
+        await player.replace({ uri: recordedUri });
         await player.seekTo(0);
-        setIsAudioActiveAsync(false);
+        player.pause();
 
         let tries = 0;
         while (tries < 20 && (!player.duration || player.duration === 0)) {
           await new Promise((r) => setTimeout(r, 100));
           tries++;
         }
+
         setIsReady(true);
-        setIsLoading(false);
-        player.volume = 1;
-        setIsAudioActiveAsync(true);
       } catch (err) {
         console.error("Failed to load audio:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     loadRecording();
   }, [recordedUri, player]);
 
   // Playback listener
   useEffect(() => {
     if (!player || !isReady) return;
-    const sub = player.addListener("playbackStatusUpdate", async (status) => {
+    const sub = player.addListener("playbackStatusUpdate", (status) => {
       setPosition(status.currentTime);
       if (status.didJustFinish) {
-        if (player.isLoaded) {
-          player.pause();
-        }
+        if (player.isLoaded) player.pause();
         setIsPlaying(false);
       }
     });
@@ -62,7 +67,7 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
     };
   }, [player, isReady]);
 
-  // Update playback position
+  // Track playback position
   useEffect(() => {
     if (!player || !isReady) return;
     let animationFrame: number;
@@ -82,11 +87,13 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
     if (isPlaying) {
       await player.pause();
       setIsPlaying(false);
+      await setIsAudioActiveAsync(false);
     } else {
       if (player.currentTime >= player.duration && player.duration > 0) {
         await player.seekTo(0);
         setPosition(0);
       }
+      await setIsAudioActiveAsync(true);
       await player.play();
       setIsPlaying(true);
     }
@@ -116,10 +123,10 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
     >
       {isLoading ? (
         <ActivityIndicator color="white" />
-      ) : (
+      ) : isReady ? (
         <>
           <Text style={{ color: "white", fontSize: 12 }}>
-            {formatTime(position)} / {formatTime(player?.duration)}
+            {formatTime(position)} / {formatTime(player?.duration || 0)}
           </Text>
           <Text style={{ color: "white", fontSize: 16 }}>Play Recording</Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
@@ -136,6 +143,8 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
             <MaterialCommunityIcons name="waveform" size={50} color="white" />
           </View>
         </>
+      ) : (
+        <Text style={{ color: "white" }}>Preparing audio...</Text>
       )}
     </View>
   );

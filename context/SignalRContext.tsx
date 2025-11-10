@@ -15,6 +15,9 @@ type SignalRContextType = {
   nextPlayer: (lobbyId: number) => Promise<void>;
   lobby: any;
   setLobby: React.Dispatch<React.SetStateAction<any>>;
+  currentRecording: any;
+  setCurrentRecording: React.Dispatch<React.SetStateAction<any>>;
+  currentPlayerId: number | null;
   errorMessage: string | null;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 };
@@ -26,6 +29,8 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const [lobby, setLobby] = useState<any>(null);
+  const [currentRecording, setCurrentRecording] = useState<any>(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -101,7 +106,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     connection.on("PlayerLeft", (player: any, newOwnerId: number) => {
-      console.log(`${player.name} left:`, player);
+      console.log(`${player.name} left:`, newOwnerId);
       setLobby((prev: any) => {
         if (!prev) return prev;
         return {
@@ -115,6 +120,27 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     connection.on("LobbyUpdated", (lobbyData: any) => {
       console.log("Lobby updated:", lobbyData);
       setLobby(lobbyData);
+      if (lobbyData.recordingsByRound.length > 0) {
+        setCurrentRecording(
+          lobbyData.recordingsByRound[lobbyData.currentRound][
+            lobbyData.currentPlayerIndex
+          ]
+        );
+        setCurrentPlayerId(lobbyData.players[lobbyData.currentPlayerIndex].id);
+      }
+      Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
+    });
+
+    connection.on("CurrentPlayerChanged", (lobbyData, playerId) => {
+      setCurrentPlayerId(playerId);
+      setLobby(lobbyData);
+      if (lobbyData.recordingsByRound.length > 0) {
+        setCurrentRecording(
+          lobbyData.recordingsByRound[lobbyData.currentRound][
+            lobbyData.currentPlayerIndex
+          ]
+        );
+      }
       Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
     });
 
@@ -199,6 +225,9 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
         nextPlayer,
         lobby,
         setLobby,
+        currentRecording,
+        setCurrentRecording,
+        currentPlayerId,
         errorMessage,
         setErrorMessage,
       }}

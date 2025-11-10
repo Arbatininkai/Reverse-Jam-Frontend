@@ -177,6 +177,8 @@ export default function Game() {
         nextSong();
         setRecordedUri(null);
       } else {
+        setCurrentTrack(null);
+        setRecordedUri(null);
         router.replace(`../game/listening-room?id=${id}`);
       }
     } catch (err) {
