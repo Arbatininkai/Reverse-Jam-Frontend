@@ -28,7 +28,6 @@ type AuthContextType = {
   logout: () => void;
 };
 
-// Dev-friendly fallback URLs for now (might not work, testers might have to create their own google client IDs)
 const API_BASE_URL =
   Platform.OS === "android"
     ? process.env.EXPO_PUBLIC_ANDROID_URL || "http://10.0.2.2:5000"
@@ -37,9 +36,6 @@ const API_BASE_URL =
 const WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_WEB_CLIENT_ID ||
   "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com";
-const ANDROID_CLIENT_ID =
-  process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID ||
-  "945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com";
 const IOS_CLIENT_ID =
   process.env.EXPO_PUBLIC_IOS_CLIENT_ID ||
   "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com";

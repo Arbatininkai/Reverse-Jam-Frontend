@@ -15,7 +15,7 @@ import { styles } from "../../styles/styles";
 
 export default function Name() {
   const router = useRouter();
-  const icons = ["😀", "🤠", "🥸", "😎", "🧐"];
+  const icons = ["\u{1F600}", "🤠", "🥸", "😎", "🧐"];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextIcon = () => {

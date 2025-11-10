@@ -7,6 +7,14 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
+  playerInfoContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+    paddingTop: 20,
+    marginBottom: 20,
+  },
   pageTitle: {
     color: "white",
     fontSize: 40,
@@ -148,6 +156,7 @@ export const styles = StyleSheet.create({
     elevation: 5,
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center",
     flexDirection: "row",
   },
   buttonText: {

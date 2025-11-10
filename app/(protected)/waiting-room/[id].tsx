@@ -137,6 +137,10 @@ export default function Waiting() {
             ))}
           </View>
 
+          <Text style={[styles.smallerText, { marginRight: 10 }]}>
+            Total Rounds: {lobby?.totalRounds || 1}
+          </Text>
+
           {lobby?.ownerId === user?.id && (
             <View style={createStyles.createButtonWrapper}>
               <TouchableOpacity

@@ -12,6 +12,7 @@ type SignalRContextType = {
   ) => Promise<void>;
   leaveLobby: (lobbyId: number) => Promise<void>;
   startGame: (lobbyId: number) => Promise<void>;
+  nextPlayer: (lobbyId: number) => Promise<void>;
   lobby: any;
   setLobby: React.Dispatch<React.SetStateAction<any>>;
   errorMessage: string | null;
@@ -111,9 +112,22 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     });
 
-    connection.on("GameStarted", (lobbyId: number, song: any) => {
-      console.log("Game started for lobby:", lobbyId, "Song:", song);
-      Storage.setItem(`song-${lobbyId}`, JSON.stringify(song));
+    connection.on("LobbyUpdated", (lobbyData: any) => {
+      console.log("Lobby updated:", lobbyData);
+      setLobby(lobbyData);
+      Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
+    });
+
+    connection.on("GameStarted", (lobbyId: number, songs: any) => {
+      console.log(
+        "Game started for lobby:",
+        lobbyId,
+        "Song:",
+        songs,
+        "Count",
+        songs.Count
+      );
+      Storage.setItem(`song-${lobbyId}`, JSON.stringify(songs));
       router.replace(`../game/${lobbyId}`);
     });
 
@@ -166,6 +180,15 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const nextPlayer = async (lobbyId: number) => {
+    try {
+      await connectionRef.current?.invoke("NextPlayer", lobbyId);
+      console.log("SignalR NextPlayer invoked");
+    } catch (err) {
+      console.error("Error calling NextPlayer:", err);
+    }
+  };
+
   return (
     <SignalRContext.Provider
       value={{
@@ -173,6 +196,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
         connectToLobby,
         leaveLobby,
         startGame,
+        nextPlayer,
         lobby,
         setLobby,
         errorMessage,
