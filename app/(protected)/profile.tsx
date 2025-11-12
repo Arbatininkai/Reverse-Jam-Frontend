@@ -65,7 +65,7 @@ export default function Profile() {
             {user?.email}
           </Text>
           <Text style={{ fontSize: 16, color: "#292828ff", marginBottom: 20 }}>
-            Total Wins: 0
+            Total Wins: {user?.totalWins}
           </Text>
 
           <TouchableOpacity

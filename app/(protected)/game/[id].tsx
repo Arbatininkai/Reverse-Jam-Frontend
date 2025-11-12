@@ -1,6 +1,7 @@
 import { AuthContext } from "@/context/AuthContext";
 import { useSignalR } from "@/context/SignalRContext";
 import { styles } from "@/styles/styles";
+import { useLobbyManager } from "@/utils/leaving-manager";
 import { Storage } from "@/utils/utils";
 import Entypo from "@expo/vector-icons/Entypo";
 import {
@@ -33,6 +34,9 @@ const API_BASE_URL =
 export default function Game() {
   const router = useRouter();
   const { id } = useGlobalSearchParams<{ id: string }>();
+  const lobbyId = Array.isArray(id) ? id[0] : id;
+
+  const { handleDeleteLobby, handleLeaveGame } = useLobbyManager();
 
   const [lobby, setLobby] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
@@ -44,10 +48,9 @@ export default function Game() {
   const [recordedUri, setRecordedUri] = useState<string | null>(null);
 
   const { user } = useContext(AuthContext)!;
-  const currentUserId = user?.id;
   const tokenId = user?.token;
 
-  const { leaveLobby, lobby: signalRLobby } = useSignalR();
+  const { lobby: signalRLobby } = useSignalR();
 
   // Make it so that the user cannot swipe back to the previous page
   useEffect(() => {
@@ -78,45 +81,6 @@ export default function Game() {
     };
     loadSong();
   }, [id]);
-
-  const handleDeleteLobby = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenId}`,
-        },
-        body: JSON.stringify(id),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to delete lobby:", errorText);
-      }
-      await Storage.removeItem(`song-${id}`);
-      await Storage.removeItem(`lobby-${id}`);
-    } catch (err) {
-      console.error("Error deleting lobby:", err);
-    }
-  };
-
-  const handleLeaveGame = async () => {
-    if (!signalRLobby || !currentUserId) return;
-
-    try {
-      await leaveLobby(Number(id));
-      console.log("SignalR LeaveLobby invoked from Game screen");
-    } catch (err) {
-      console.error("Error calling LeaveLobby:", err);
-    }
-
-    // Only delete lobby if last player
-    if (signalRLobby.players.length < 1) {
-      await handleDeleteLobby();
-    }
-
-    router.replace("../main");
-  };
 
   const startRecording = async () => {
     await audioRecorder.prepareToRecordAsync();
@@ -157,6 +121,8 @@ export default function Game() {
         type: "audio/m4a",
       } as any);
 
+      formData.append("OriginalSongText", currentTrack.url); //will later provide song lyrics
+
       const response = await fetch(
         `${API_BASE_URL}/api/Recordings/upload/${id}/${currentTrackIndex}`,
         {
@@ -170,7 +136,7 @@ export default function Game() {
 
       if (!response.ok) throw new Error("Upload failed:  " + response.text());
       const data = await response.json();
-      console.log("Uploaded recording:", data);
+      console.log("Recording result:", data);
 
       // If this is not the final song, go to the next one
       if (currentTrackIndex !== signalRLobby.totalRounds - 1) {
@@ -195,9 +161,13 @@ export default function Game() {
       >
         <TouchableOpacity
           style={styles.backButton}
-          onPress={
-            lobby?.players?.length === 1 ? handleDeleteLobby : handleLeaveGame
-          }
+          onPress={() => {
+            if (lobby?.players?.length === 1) {
+              handleDeleteLobby(lobbyId);
+            } else {
+              handleLeaveGame(lobbyId);
+            }
+          }}
         >
           <Entypo name="cross" size={30} color="#ee2121ff" />
           <Text style={styles.leaveText}>Leave Game</Text>
