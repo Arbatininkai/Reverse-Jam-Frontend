@@ -1,14 +1,14 @@
 import { AuthContext } from "@/context/AuthContext";
 import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
+import { useLobbyManager } from "@/utils/leaving-manager";
 import { Storage } from "@/utils/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
+import { useGlobalSearchParams } from "expo-router";
 import { useContext, useEffect } from "react";
 import {
   Image,
   ImageBackground,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -17,20 +17,14 @@ import {
 import { styles } from "../../../styles/styles";
 
 export default function Waiting() {
-  const router = useRouter();
-  const pathname = usePathname();
   const { id } = useGlobalSearchParams<{ id: string }>();
+  const lobbyId = Array.isArray(id) ? id[0] : id;
+  const { handleDeleteLobby, handleLeaveGame } = useLobbyManager();
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
 
-  const {
-    connectionRef,
-    connectToLobby,
-    leaveLobby,
-    startGame,
-    lobby,
-    setLobby,
-  } = useSignalR();
+  const { connectionRef, connectToLobby, startGame, lobby, setLobby } =
+    useSignalR();
 
   useEffect(() => {
     const loadLobby = async () => {
@@ -54,36 +48,6 @@ export default function Waiting() {
     loadLobby();
   }, [id]);
 
-  const API_BASE_URL =
-    Platform.OS === "android"
-      ? process.env.EXPO_PUBLIC_ANDROID_URL
-      : process.env.EXPO_PUBLIC_BASE_URL;
-
-  const handleDeleteLobby = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenId}`,
-        },
-        body: JSON.stringify(id),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to delete lobby:", errorText);
-      }
-      await Storage.removeItem(`lobby-${id}`);
-    } catch (err) {
-      console.error("Error deleting lobby:", err);
-    }
-  };
-
-  const handleLeaveLobby = async () => {
-    await leaveLobby(Number(id));
-    if (pathname !== "/" && lobby?.players?.length !== 1) router.replace("/");
-  };
-
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -93,9 +57,13 @@ export default function Waiting() {
       >
         <TouchableOpacity
           style={styles.backButton}
-          onPress={
-            lobby?.players?.length === 1 ? handleDeleteLobby : handleLeaveLobby
-          }
+          onPress={() => {
+            if (lobby?.players?.length === 1) {
+              handleDeleteLobby(lobbyId);
+            } else {
+              handleLeaveGame(lobbyId);
+            }
+          }}
         >
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
@@ -145,7 +113,7 @@ export default function Waiting() {
             <View style={createStyles.createButtonWrapper}>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={handleDeleteLobby}
+                onPress={() => handleDeleteLobby(lobbyId)}
               >
                 <Text style={styles.deleteText}>Delete Lobby</Text>
               </TouchableOpacity>
