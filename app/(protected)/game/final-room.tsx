@@ -22,6 +22,7 @@ export default function FinalRoom() {
   const { id, scores, players } = useLocalSearchParams();
   const lobbyId = Array.isArray(id) ? id[0] : id;
   const { handleDeleteLobby, handleLeaveGame } = useLobbyManager();
+  const [firstRender, setFirstRender] = useState(true);
 
   const parsedPlayers =
     typeof players === "string" ? JSON.parse(players) : players;
@@ -31,9 +32,10 @@ export default function FinalRoom() {
   const { lobby: signalRLobby, connectionRef } = useSignalR();
 
   useEffect(() => {
-    if (signalRLobby) {
+    if (signalRLobby && firstRender) {
       setLobby(signalRLobby);
       Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
+      setFirstRender(false);
     }
   }, [signalRLobby]);
 
@@ -53,8 +55,6 @@ export default function FinalRoom() {
   }, [connectionRef.current]);
 
   const playerCount = lobby?.players?.length || 0;
-  const totalRounds = lobby?.totalRounds || 1;
-  const currentRound = lobby?.currentRound || 0;
 
   const sortedScores = [...finalScores].sort((a, b) => b.score - a.score);
 
@@ -95,9 +95,6 @@ export default function FinalRoom() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.sectoinTitleText}>Game Results</Text>
-          <Text style={styles.smallerText}>
-            Round: {currentRound + 1} / {totalRounds}
-          </Text>
           <Text style={styles.smallerText}>Players: {playerCount}</Text>
 
           {sortedScores.length > 0 ? (
@@ -154,9 +151,7 @@ export default function FinalRoom() {
           ) : (
             <View style={{ alignItems: "center", marginTop: 50 }}>
               <Text style={styles.sectoinTitleText}>Calculating Scores...</Text>
-              <Text style={styles.smallestText}>
-                Final results will appear here shortly
-              </Text>
+              <Text style={styles.smallerText}>No scores available</Text>
             </View>
           )}
         </ScrollView>

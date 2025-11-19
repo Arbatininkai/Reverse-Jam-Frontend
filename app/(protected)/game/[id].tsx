@@ -121,7 +121,7 @@ export default function Game() {
         type: "audio/m4a",
       } as any);
 
-      formData.append("OriginalSongText", currentTrack.url); //will later provide song lyrics
+      //formData.append("OriginalSongLyrics", currentTrack.lyrics);
 
       const response = await fetch(
         `${API_BASE_URL}/api/Recordings/upload/${id}/${currentTrackIndex}`,
@@ -134,9 +134,7 @@ export default function Game() {
         }
       );
 
-      if (!response.ok) throw new Error("Upload failed:  " + response.text());
-      const data = await response.json();
-      console.log("Recording result:", data);
+      if (!response.ok) throw new Error("Upload failed:  " + response);
 
       // If this is not the final song, go to the next one
       if (currentTrackIndex !== signalRLobby.totalRounds - 1) {

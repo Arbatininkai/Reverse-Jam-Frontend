@@ -66,8 +66,6 @@ export const styles = StyleSheet.create({
     marginTop: 20,
   },
   emojiText: {
-   
-    
     fontSize: 45,
     letterSpacing: 1,
   },
@@ -179,7 +177,10 @@ export const styles = StyleSheet.create({
     color: "#fc1a1aff",
     fontWeight: "bold",
     fontSize: 25,
-    paddingBottom: 20,
+    textShadowColor: "#000",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10,
+    paddingBottom: 10,
   },
   deleteButton: {
     backgroundColor: "#983A3A",
@@ -278,7 +279,7 @@ export const styles = StyleSheet.create({
     borderBottomColor: "black",
     transform: [{ rotate: "90deg" }],
   },
-    wideButton: {
+  wideButton: {
     backgroundColor: "#983A3A",
     width: 370,
     height: 80,
@@ -299,14 +300,12 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     flexDirection: "row",
   },
-  scoreButton:{
-    
+  scoreButton: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     borderRadius: 12,
     marginVertical: 8,
     width: "90%",
-  
   },
 });

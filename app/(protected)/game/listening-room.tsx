@@ -34,6 +34,8 @@ export default function ListeningRoom() {
   const { lobby: signalRLobby, nextPlayer, connectionRef } = useSignalR();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [aiVotingScore, setAiVotingScore] = useState(null);
+  const [isHumanVoting, setIsHumanVoting] = useState(true);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
   const [voteCount, setVoteCount] = useState(0);
@@ -56,6 +58,8 @@ export default function ListeningRoom() {
   useEffect(() => {
     if (signalRLobby) {
       setLobby(signalRLobby);
+      //if (signalRLobby.aiRate) setAiVotingScore(currentRecording.score);
+      if (!signalRLobby.humanRate) setIsHumanVoting(false);
       Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
@@ -74,6 +78,7 @@ export default function ListeningRoom() {
         );
         if (!response.ok) throw new Error(await response.text());
         const files = await response.json();
+
         setRecordings(files);
       } catch (err) {
         console.error("Error fetching recordings:", err);
@@ -160,25 +165,28 @@ export default function ListeningRoom() {
           body: JSON.stringify(lobby.lobbyCode),
         }
       );
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Final scores calculated:", result);
-        router.replace({
-          pathname: "/(protected)/game/final-room",
-          params: {
-            id: id,
-            lobbyCode: lobby.lobbyCode,
-            scores: JSON.stringify(result.scores),
-            players: JSON.stringify(lobby.players),
-          },
-        });
-        if (connectionRef.current) {
-          await connectionRef.current.invoke(
-            "NotifyFinalScores",
-            Number(id),
-            result.scores
-          );
-        }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to submit vote: ${errorText}`);
+      }
+      const result = await response.json();
+      console.log("Final scores calculated:", result);
+
+      router.replace({
+        pathname: "/(protected)/game/final-room",
+        params: {
+          id: id,
+          lobbyCode: lobby.lobbyCode,
+          scores: JSON.stringify(result.scores),
+          players: JSON.stringify(lobby.players),
+        },
+      });
+      if (connectionRef.current) {
+        await connectionRef.current.invoke(
+          "NotifyFinalScores",
+          Number(id),
+          result.scores
+        );
       }
     } catch (err) {
       console.error("Error calculating final scores:", err);
@@ -236,7 +244,7 @@ export default function ListeningRoom() {
                 </View>
               )}
 
-              {!isCurrentPlayerSelf && (
+              {!isCurrentPlayerSelf && !hasSubmittedVote && (
                 <>
                   <View style={styles.wideButton}>
                     {emojis.map((item, index) => (
@@ -279,6 +287,24 @@ export default function ListeningRoom() {
                 </TouchableOpacity>
               )}
 
+              {aiVotingScore !== null && (
+                <View
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 10,
+                    marginTop: 20,
+                  }}
+                >
+                  <Text style={styles.emojiText}>
+                    {emojis[Math.round(aiVotingScore)].emoji}
+                  </Text>
+                  <Text style={styles.smallestText}>
+                    AI rating: {aiVotingScore}/5 for {currentPlayer?.name}
+                  </Text>
+                </View>
+              )}
+
               {(lobby?.ownerId === user?.id ||
                 (isLastPlayer && isLastRound)) && (
                 <TouchableOpacity
@@ -291,7 +317,7 @@ export default function ListeningRoom() {
                     !canOwnerAdvance && { opacity: 0.5 },
                   ]}
                   onPress={async () => {
-                    if (!canOwnerAdvance) {
+                    if (!canOwnerAdvance && isHumanVoting) {
                       alert(
                         `Waiting for ${
                           playerCount - 1 - voteCount

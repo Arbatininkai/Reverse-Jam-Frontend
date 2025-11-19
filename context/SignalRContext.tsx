@@ -3,6 +3,7 @@ import * as signalR from "@microsoft/signalr";
 import { usePathname, useRouter } from "expo-router";
 import React, { createContext, useContext, useRef, useState } from "react";
 import { Platform } from "react-native";
+import { AuthContext } from "./AuthContext";
 
 type SignalRContextType = {
   connectionRef: React.MutableRefObject<signalR.HubConnection | null>;
@@ -27,7 +28,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const [lobby, setLobby] = useState<any>(null);
-  const [currentRecording, setCurrentRecording] = useState<any>(null);
+  const { user, setUser } = useContext(AuthContext)!;
   const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -65,18 +66,15 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // If the connection is already established, stop it first
     let connection = connectionRef.current;
-    if (
-      connection &&
-      connection.state !== signalR.HubConnectionState.Disconnected
-    ) {
-      console.log(
-        "Stopping existing SignalR connection before reconnecting..."
-      );
+    if (connection) {
       try {
-        await connection.stop();
+        if (connection.state !== signalR.HubConnectionState.Disconnected) {
+          await connection.stop();
+        }
+      } catch (err) {
+        console.warn("Error stopping old connection:", err);
+      } finally {
         connectionRef.current = null;
-      } catch (stopErr) {
-        console.warn("Error stopping old connection:", stopErr);
       }
     }
 
@@ -103,8 +101,8 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     });
 
-    connection.on("PlayerLeft", (player: any, newOwnerId: number) => {
-      console.log(`${player.name} left:`, newOwnerId);
+    connection.on("PlayerLeft", (player: any, newOwnerId: number, lobby) => {
+      console.log(`${player.name} left:`, newOwnerId, lobby);
       setLobby((prev: any) => {
         if (!prev) return prev;
         return {
@@ -128,16 +126,25 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     connection.on("GameStarted", (lobbyId: number, songs: any) => {
-      console.log(
-        "Game started for lobby:",
-        lobbyId,
-        "Song:",
-        songs,
-        "Count",
-        songs.Count
-      );
       Storage.setItem(`song-${lobbyId}`, JSON.stringify(songs));
       router.replace(`../game/${lobbyId}`);
+    });
+
+    connection.on("PlayerWon", (winner) => {
+      console.log("Winner: ", winner);
+      if (winner.id === user?.id) {
+        setUser((prev: any) => ({
+          ...prev,
+          totalWins: winner.totalWins,
+        }));
+        Storage.setItem("user", JSON.stringify(winner));
+      }
+    });
+
+    connection.on("YouLeft", async () => {
+      setLobby(null);
+      console.log("You left the lobby");
+      connectionRef.current = null;
     });
 
     connection.on("LobbyDeleted", async () => {
