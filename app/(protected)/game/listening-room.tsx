@@ -3,7 +3,6 @@ import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { styles } from "@/styles/styles";
 import { Storage } from "@/utils/utils";
-import { Entypo } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -32,9 +31,11 @@ export default function ListeningRoom() {
 
   const [lobby, setLobby] = useState<any>(null);
   const [recordings, setRecordings] = useState<any[]>([]);
-  const { leaveLobby, lobby: signalRLobby, nextPlayer, connectionRef } = useSignalR();
+  const { lobby: signalRLobby, nextPlayer, connectionRef } = useSignalR();
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [aiVotingScore, setAiVotingScore] = useState(null);
+  const [isHumanVoting, setIsHumanVoting] = useState(true);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
   const [voteCount, setVoteCount] = useState(0);
@@ -54,15 +55,15 @@ export default function ListeningRoom() {
   const isLastPlayer = currentIndex === playerCount - 1;
   const isLastRound = currentRound === totalRounds - 1;
 
-
   useEffect(() => {
     if (signalRLobby) {
       setLobby(signalRLobby);
+      //if (signalRLobby.aiRate) setAiVotingScore(currentRecording.score);
+      if (!signalRLobby.humanRate) setIsHumanVoting(false);
       Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
   }, [signalRLobby]);
-
 
   useEffect(() => {
     if (!lobby) return;
@@ -77,6 +78,7 @@ export default function ListeningRoom() {
         );
         if (!response.ok) throw new Error(await response.text());
         const files = await response.json();
+
         setRecordings(files);
       } catch (err) {
         console.error("Error fetching recordings:", err);
@@ -85,14 +87,12 @@ export default function ListeningRoom() {
     fetchRecordings();
   }, [lobby]);
 
-
   useEffect(() => {
     setSelectedScore(null);
     setHasSubmittedVote(false);
     setVoteCount(0);
   }, [currentIndex]);
 
- 
   useEffect(() => {
     const connection = connectionRef.current;
     if (!connection) return;
@@ -104,41 +104,6 @@ export default function ListeningRoom() {
       connection.off("PlayerVoted");
     };
   }, [connectionRef.current]);
-
-  const handleLeaveGame = async () => {
-    if (!signalRLobby || !currentUserId) return;
-    try {
-      await leaveLobby(Number(id));
-    } catch (err) {
-      console.error("Error leaving lobby:", err);
-    }
-    if (signalRLobby.players.length < 1) {
-      await Storage.removeItem(`lobby-${id}`);
-      await Storage.removeItem(`song-${id}`);
-    }
-    router.replace("../main");
-  };
-
-  const handleDeleteLobby = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/Lobby/delete`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenId}`,
-        },
-        body: JSON.stringify(id),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to delete lobby:", errorText);
-      }
-      await Storage.removeItem(`song-${id}`);
-      await Storage.removeItem(`lobby-${id}`);
-    } catch (err) {
-      console.error("Error deleting lobby:", err);
-    }
-  };
 
   const handleEmojiPress = (score: number) => {
     if (!currentPlayer || isCurrentPlayerSelf) return;
@@ -177,7 +142,7 @@ export default function ListeningRoom() {
       const result = await response.json();
       console.log("Vote submitted successfully:", result);
       setHasSubmittedVote(true);
-     
+
       if (connectionRef.current) {
         await connectionRef.current.invoke("NotifyPlayerVoted", Number(id));
       }
@@ -200,24 +165,28 @@ export default function ListeningRoom() {
           body: JSON.stringify(lobby.lobbyCode),
         }
       );
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Final scores calculated:", result);
-        router.replace({
-          pathname: "/(protected)/game/final-room",
-          params: {
-            lobbyId: id,
-            lobbyCode: lobby.lobbyCode,
-            scores: JSON.stringify(result.scores),
-          },
-        });
-        if (connectionRef.current) {
-          await connectionRef.current.invoke(
-            "NotifyFinalScores",
-            Number(id),
-            result.scores
-          );
-        }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to submit vote: ${errorText}`);
+      }
+      const result = await response.json();
+      console.log("Final scores calculated:", result);
+
+      router.replace({
+        pathname: "/(protected)/game/final-room",
+        params: {
+          id: id,
+          lobbyCode: lobby.lobbyCode,
+          scores: JSON.stringify(result.scores),
+          players: JSON.stringify(lobby.players),
+        },
+      });
+      if (connectionRef.current) {
+        await connectionRef.current.invoke(
+          "NotifyFinalScores",
+          Number(id),
+          result.scores
+        );
       }
     } catch (err) {
       console.error("Error calculating final scores:", err);
@@ -243,18 +212,6 @@ export default function ListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={
-              lobby?.players?.length === 1
-                ? handleDeleteLobby
-                : handleLeaveGame
-            }
-          >
-            <Entypo name="cross" size={30} color="#ee2121ff" />
-            <Text style={styles.leaveText}>Leave Game</Text>
-          </TouchableOpacity>
-
           <Text style={styles.sectoinTitleText}>Listen To The Singers</Text>
           <Text style={styles.sectoinTitleText}>
             Round: {currentRound + 1} / {totalRounds}
@@ -287,7 +244,7 @@ export default function ListeningRoom() {
                 </View>
               )}
 
-              {!isCurrentPlayerSelf && (
+              {!isCurrentPlayerSelf && !hasSubmittedVote && (
                 <>
                   <View style={styles.wideButton}>
                     {emojis.map((item, index) => (
@@ -320,7 +277,7 @@ export default function ListeningRoom() {
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    { backgroundColor: "#22c55e" },
+                    { backgroundColor: "#22c55e", marginTop: 20 },
                     !selectedScore && { opacity: 0.5 },
                   ]}
                   onPress={handleSubmitVote}
@@ -330,7 +287,26 @@ export default function ListeningRoom() {
                 </TouchableOpacity>
               )}
 
-              {(lobby?.ownerId === user?.id || (isLastPlayer && isLastRound) ) && (
+              {aiVotingScore !== null && (
+                <View
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 10,
+                    marginTop: 20,
+                  }}
+                >
+                  <Text style={styles.emojiText}>
+                    {emojis[Math.round(aiVotingScore)].emoji}
+                  </Text>
+                  <Text style={styles.smallestText}>
+                    AI rating: {aiVotingScore}/5 for {currentPlayer?.name}
+                  </Text>
+                </View>
+              )}
+
+              {(lobby?.ownerId === user?.id ||
+                (isLastPlayer && isLastRound)) && (
                 <TouchableOpacity
                   style={[
                     styles.button,
@@ -341,7 +317,7 @@ export default function ListeningRoom() {
                     !canOwnerAdvance && { opacity: 0.5 },
                   ]}
                   onPress={async () => {
-                    if (!canOwnerAdvance) {
+                    if (!canOwnerAdvance && isHumanVoting) {
                       alert(
                         `Waiting for ${
                           playerCount - 1 - voteCount

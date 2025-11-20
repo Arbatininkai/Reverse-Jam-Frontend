@@ -25,6 +25,7 @@ export default function Create() {
   const [totalRounds, setTotalRounds] = useState(1);
 
   const { user } = useContext(AuthContext)!;
+  const [errorMessage, setErrorMessage] = useState("");
   const tokenId = user?.token;
 
   const API_BASE_URL =
@@ -34,6 +35,11 @@ export default function Create() {
 
   const handleCreateLobby = async () => {
     try {
+      if (!aiRate && !humanRate) {
+        setErrorMessage("Please select voting system");
+        return;
+      }
+      setErrorMessage("");
       const response = await fetch(`${API_BASE_URL}/api/Lobby/create`, {
         method: "POST",
         headers: {
@@ -73,7 +79,10 @@ export default function Create() {
       >
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            setErrorMessage("");
+            router.back();
+          }}
         >
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
@@ -121,7 +130,10 @@ export default function Create() {
             <View style={createStyles.option}>
               <Checkbox
                 status={aiRate ? "checked" : "unchecked"}
-                onPress={() => setAiRate(!aiRate)}
+                onPress={() => {
+                  setAiRate(!aiRate);
+                  setErrorMessage("");
+                }}
                 color="#FF5722"
                 uncheckedColor="#ccc"
               />
@@ -131,7 +143,10 @@ export default function Create() {
             <View style={createStyles.option}>
               <Checkbox
                 status={humanRate ? "checked" : "unchecked"}
-                onPress={() => setHumanRate(!humanRate)}
+                onPress={() => {
+                  setHumanRate(!humanRate);
+                  setErrorMessage("");
+                }}
                 color="#f321a3ff"
                 uncheckedColor="#ccc"
               />
@@ -139,7 +154,13 @@ export default function Create() {
             </View>
           </View>
 
-          <Text style={createStyles.selectText}>Select Round Amount</Text>
+          {errorMessage && errorMessage != "" && (
+            <Text style={[styles.errorText, { marginTop: 10 }]}>
+              {errorMessage}
+            </Text>
+          )}
+
+          <Text style={[createStyles.selectText]}>Select Round Amount</Text>
 
           <RadioButton.Group
             onValueChange={(newValue) => setTotalRounds(parseInt(newValue))}

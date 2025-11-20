@@ -14,6 +14,7 @@ type User = {
   name?: string;
   photoUrl?: string;
   token: string;
+  totalWins: number;
 } | null;
 
 type DecodedToken = {
@@ -145,6 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           name: responseData.user.name,
           photoUrl: responseData.user.photoUrl,
           token: responseData.token,
+          totalWins: responseData.user.totalWins,
         });
 
         setIsLoggedIn(true);

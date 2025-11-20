@@ -31,6 +31,12 @@ export default function Settings() {
           }}
         >
           <TouchableOpacity
+            onPress={() => router.push("/profile")}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Player Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => router.push("/name")}
             style={styles.button}
           >

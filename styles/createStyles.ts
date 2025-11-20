@@ -106,7 +106,7 @@ export const createStyles = StyleSheet.create({
     textShadowColor: "#000",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
-    paddingTop: 20,
+    marginTop: 15,
     paddingBottom: 10,
     marginLeft: 8,
   },
