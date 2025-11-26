@@ -7,12 +7,10 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { useLocalSearchParams } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
-  Image,
   ImageBackground,
-  ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 export default function FinalRoom() {
@@ -58,20 +56,21 @@ export default function FinalRoom() {
 
   const sortedScores = [...finalScores].sort((a, b) => b.score - a.score);
 
-  const getColor = (index: number) => {
-    if (index === 0) return "#FFD700";
-    if (index === 1) return "#C0C0C0";
-    if (index === 2) return "#CD7F32";
-    return "#983A3A";
-  };
+  const first = sortedScores[0];
+  const second = sortedScores[1];
+  const third = sortedScores[2];
 
-  return (
+  const findPlayer = (id: string) =>
+    parsedPlayers?.find((p: any) => p.id === id);
+  
+ return (
     <View style={styles.container}>
       <ImageBackground
         source={require("../../../assets/images/main-background.png")}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
+        {/* Leave button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => {
@@ -86,75 +85,92 @@ export default function FinalRoom() {
           <Text style={styles.leaveText}>Leave Game</Text>
         </TouchableOpacity>
 
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingBottom: 40,
-            alignItems: "center",
+        {/* WINNER TITLE */}
+        <Text
+          style={{
+            fontSize: 40,
+            fontWeight: "bold",
+            color: "yellow",
+            marginTop: 80,
+            textAlign: "center",
           }}
-          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Game Results</Text>
-          <Text style={styles.smallerText}>Players: {playerCount}</Text>
+          WINNERS!!!
+        </Text>
 
-          {sortedScores.length > 0 ? (
-            <View
-              style={{ width: "100%", alignItems: "center", marginTop: 20 }}
-            >
-              <Text style={[styles.sectoinTitleText, { marginBottom: 20 }]}>
-                Final Scores
+        {/* PODIUM CONTAINER */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "flex-end",
+            marginTop: 40,
+            width: "100%",
+            paddingHorizontal: 20,
+          }}
+        >
+          {/* SECOND PLACE */}
+          {second && (
+            <View style={{ alignItems: "center", marginRight: 10 }}>
+              <Text style={{ fontSize: 40 }}>
+                {findPlayer(second.userId)?.emoji || "🤓"}
               </Text>
-              {sortedScores.map((s, i) => {
-                const p = parsedPlayers?.find((x: any) => x.id === s.userId);
-                return (
-                  <View
-                    key={s.userId}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: getColor(i),
-                      padding: 15,
-                      borderRadius: 12,
-                      marginVertical: 8,
-                      width: "90%",
-                      borderWidth: s.userId === currentUserId ? 3 : 0,
-                      borderColor: "#ee2121ff",
-                    }}
-                  >
-                    <Image
-                      source={{ uri: p?.photoUrl }}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        marginRight: 15,
-                      }}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[styles.smallerText, { fontWeight: "bold" }]}
-                      >
-                        {p?.name || "Unknown Player"}
-                        {s.userId === currentUserId && " (You)"}
-                      </Text>
-                      <Text style={styles.smallestText}>
-                        Score: {s.score} points
-                      </Text>
-                    </View>
-                    <Text style={[styles.sectoinTitleText, { fontSize: 20 }]}>
-                      #{i + 1}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={{ alignItems: "center", marginTop: 50 }}>
-              <Text style={styles.sectoinTitleText}>Calculating Scores...</Text>
-              <Text style={styles.smallerText}>No scores available</Text>
+              <Text style={{ color: "white", marginBottom: 6 }}>
+                {findPlayer(second.userId)?.name}
+              </Text>
+              <View
+                style={{
+                  width: 80,
+                  height: 120,
+                  backgroundColor: "#d6c8e0",
+                  borderRadius: 10,
+                }}
+              />
             </View>
           )}
-        </ScrollView>
+
+          {/* FIRST PLACE */}
+          {first && (
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: 55 }}>
+                {findPlayer(first.userId)?.emoji || "😎"}
+              </Text>
+              <Text style={{ color: "white", marginBottom: 6 }}>
+                {findPlayer(first.userId)?.name}
+              </Text>
+              <View
+                style={{
+                  width: 110,
+                  height: 170,
+                  backgroundColor: "gold",
+                  borderRadius: 10,
+                  borderWidth: 3,
+                  borderColor: "#00aaff",
+                }}
+              />
+            </View>
+          )}
+
+          {/* THIRD PLACE */}
+          {third && (
+            <View style={{ alignItems: "center", marginLeft: 10 }}>
+              <Text style={{ fontSize: 40 }}>
+                {findPlayer(third.userId)?.emoji || "🤯"}
+              </Text>
+              <Text style={{ color: "white", marginBottom: 6 }}>
+                {findPlayer(third.userId)?.name}
+              </Text>
+              <View
+                style={{
+                  width: 80,
+                  height: 90,
+                  backgroundColor: "#b87d3b",
+                  borderRadius: 10,
+                }}
+              />
+            </View>
+          )}
+        </View>
       </ImageBackground>
     </View>
   );

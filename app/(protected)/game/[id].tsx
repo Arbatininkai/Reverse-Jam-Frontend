@@ -195,11 +195,16 @@ export default function Game() {
                 style={{
                   width: 240,
                   height: 240,
-                  alignSelf: "center",
+                  borderRadius: 240,     
                   marginTop: 20,
-                  borderRadius: 12,
+                  alignSelf: "center",
+                  borderWidth: 6,         
+                  borderColor: "#ffffff",
+                  overflow: "hidden",     
+                  backgroundColor: "#000",
                 }}
               />
+
 
               <MusicPlayer
                 key={currentTrack.url}
