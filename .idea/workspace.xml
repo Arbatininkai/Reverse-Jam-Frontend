@@ -5,20 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a440978d-feb3-4fad-bc30-38b72770d5f1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(auth)/_layout.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(auth)/login.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(protected)/audio.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(protected)/audio.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(protected)/game/music-player.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(protected)/game/music-player.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(protected)/game/recording-player.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(protected)/game/recording-player.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(protected)/name.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(protected)/name.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(protected)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(protected)/profile.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/context/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/context/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/styles/styles.ts" beforeDir="false" afterPath="$PROJECT_DIR$/styles/styles.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
