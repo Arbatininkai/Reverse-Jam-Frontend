@@ -2,7 +2,6 @@ import { AuthContext } from "@/context/AuthContext";
 import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { styles } from "@/styles/styles";
-import { Storage } from "@/utils/utils";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -32,6 +31,7 @@ export default function ListeningRoom() {
   const [lobby, setLobby] = useState<any>(null);
   const [recordings, setRecordings] = useState<any[]>([]);
   const { lobby: signalRLobby, nextPlayer, connectionRef } = useSignalR();
+  const [allRecordingsReady, setAllRecordingsReady] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [aiVotingScore, setAiVotingScore] = useState(null);
@@ -50,23 +50,28 @@ export default function ListeningRoom() {
     (r) => r.userId === currentPlayer?.id && r.round === currentRound + 1
   );
 
-  const allRecordingsReady = recordings.length === playerCount * totalRounds;
   const isCurrentPlayerSelf = currentPlayer?.id === currentUserId;
   const isLastPlayer = currentIndex === playerCount - 1;
   const isLastRound = currentRound === totalRounds - 1;
 
   useEffect(() => {
     if (signalRLobby) {
-      setLobby(signalRLobby);
+      if (
+        recordings.length ===
+          signalRLobby.players.length * signalRLobby.totalRounds &&
+        !allRecordingsReady
+      ) {
+        setLobby(signalRLobby);
+        if (!signalRLobby.humanRate) setIsHumanVoting(false);
+        setAllRecordingsReady(true);
+      }
       //if (signalRLobby.aiRate) setAiVotingScore(currentRecording.score);
-      if (!signalRLobby.humanRate) setIsHumanVoting(false);
-      Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
   }, [signalRLobby]);
 
   useEffect(() => {
-    if (!lobby) return;
+    if (!signalRLobby) return;
     const fetchRecordings = async () => {
       try {
         const response = await fetch(
@@ -85,7 +90,7 @@ export default function ListeningRoom() {
       }
     };
     fetchRecordings();
-  }, [lobby]);
+  }, [signalRLobby]);
 
   useEffect(() => {
     setSelectedScore(null);
@@ -212,7 +217,9 @@ export default function ListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Listen To The Singers</Text>
+          <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
+            Listen To The Singers
+          </Text>
           <Text style={styles.sectoinTitleText}>
             Round: {currentRound + 1} / {totalRounds}
           </Text>
