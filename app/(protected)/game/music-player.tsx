@@ -1,15 +1,15 @@
 import { styles } from "@/styles/styles";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
+import { useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface MusicPlayerProps {
-  audioUrl: string;
+  audioUrl: any;
   recorderState: any;
-  startRecording: () => void;
-  stopRecording: () => void;
+  startRecording: () => Promise<void>;
+  stopRecording: () => Promise<void>;
   recordedUri: string | null;
 }
 
@@ -20,42 +20,13 @@ export default function MusicPlayer({
   stopRecording,
   recordedUri,
 }: MusicPlayerProps) {
-  const player = useAudioPlayer(undefined);
+  const player = useAudioPlayer(audioUrl);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const loadRecording = async () => {
-      if (!audioUrl || !player) return;
-      try {
-        setIsPlaying(false);
-        setPosition(0);
-        setIsReady(false);
-        player.loop = false;
-        await player.remove();
-        await player.replace({ uri: audioUrl });
-
-        player.volume = 0;
-        player.play();
-        player.pause();
-        await player.seekTo(0);
-        setIsAudioActiveAsync(false);
-
-        setIsReady(true);
-        player.volume = 1;
-        setIsAudioActiveAsync(true);
-      } catch (err) {
-        console.error("Failed to load audio:", err);
-      }
-    };
-    loadRecording();
-  }, [audioUrl, player]);
 
   // Update playback status
   useEffect(() => {
-    if (!player || !isReady) return;
     let mounted = true;
     const sub = player.addListener("playbackStatusUpdate", (status) => {
       if (!mounted) return;
@@ -74,7 +45,7 @@ export default function MusicPlayer({
       mounted = false;
       sub.remove();
     };
-  }, [player, isReady]);
+  }, [player]);
 
   // For smooth slide bar animation
   useEffect(() => {
@@ -98,7 +69,6 @@ export default function MusicPlayer({
       player.pause();
       setIsPlaying(false);
     } else {
-      // If song is over, reset to beginning
       if (player.currentTime >= player.duration && player.duration > 0) {
         player.seekTo(0);
         setPosition(0);
@@ -114,29 +84,13 @@ export default function MusicPlayer({
     setIsPlaying(true);
   };
 
-  const handleSeek = async (seekTo: number) => {
-    if (!player?.isLoaded) return;
-
-    try {
-      player.volume = 0;
-      player.play();
+  const handleSeek = (seekTo: number) => {
+    if (player.isLoaded) {
       player.pause();
       setIsPlaying(false);
-      setIsAudioActiveAsync(false);
-
-      await player.seekTo(seekTo);
-      setPosition(seekTo);
-
-      await new Promise((r) => setTimeout(r, 100));
-
-      player.volume = 1;
-      setIsAudioActiveAsync(true);
-      if (isPlaying) {
-        await player.play();
-      }
-    } catch (err) {
-      console.error("Error while seeking:", err);
+      player.seekTo(seekTo);
     }
+    setPosition(seekTo);
   };
 
   const formatTime = (time: number) => {
@@ -174,7 +128,7 @@ export default function MusicPlayer({
       </View>
 
       <View style={styles.songOptionsContainer}>
-        <TouchableOpacity
+        <TouchableOpacity 
           onPress={() =>
             recorderState.isRecording ? stopRecording() : startRecording()
           }

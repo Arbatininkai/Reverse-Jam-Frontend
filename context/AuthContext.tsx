@@ -150,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         setIsLoggedIn(true);
+        router.replace("/main");
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
