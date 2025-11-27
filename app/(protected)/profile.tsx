@@ -92,7 +92,7 @@ export default function Profile() {
               paddingHorizontal: 20,
               borderRadius: 10,
             }}
-            onPress={() => router.push("./game-information")}
+            onPress={() => router.push("./player-information")}
           >
             <AntDesign name="inbox" size={20} color="white" />
             <Text style={{ color: "#fff", marginLeft: 8 }}>
