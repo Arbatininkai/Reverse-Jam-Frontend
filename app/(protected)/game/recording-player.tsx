@@ -12,7 +12,7 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
   let didRun = false;
   const player = useAudioPlayer(undefined);
 
-  // Load recording whenever the URI changes
+
   useEffect(() => {
     const loadRecording = async () => {
       if (didRun) return;
@@ -26,11 +26,11 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
         setIsPlaying(false);
         setPosition(0);
 
-        // Remove any previously loaded audio
+       
         await player.remove();
         player.loop = false;
 
-        // Replace with new recording
+        
         await player.replace({ uri: recordedUri });
         await player.seekTo(0);
         player.pause();

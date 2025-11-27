@@ -43,11 +43,18 @@ export default function Name() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${tokenId}`,
       },
-      body: JSON.stringify({ name: buttonText }),
+      body: JSON.stringify({ 
+        name: buttonText, 
+        emoji: icons[currentIndex] 
+      }),
     });
 
     if (response.ok) {
-      const updatedUser = { ...user!, name: buttonText };
+      const updatedUser = { 
+        ...user!, 
+        name: buttonText, 
+        emoji: icons[currentIndex] 
+      };
       setUser(updatedUser);
       await Storage.setItem("user", JSON.stringify(updatedUser));
     }

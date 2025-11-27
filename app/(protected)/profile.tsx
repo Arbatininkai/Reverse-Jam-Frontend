@@ -32,7 +32,7 @@ export default function Profile() {
 
         <View
           style={{
-            backgroundColor: "rgba(255,255,255,0.9)",
+            backgroundColor: "rgba(255,255,255)",
             margin: 20,
             borderRadius: 20,
             paddingVertical: 30,
@@ -52,8 +52,8 @@ export default function Profile() {
               width: 120,
               height: 120,
               borderRadius: 60,
-              borderWidth: 3,
-              borderColor: "#1cb808",
+              borderWidth: 2,
+              borderColor: "#000000ff",
               marginBottom: 20,
             }}
           />
@@ -72,7 +72,7 @@ export default function Profile() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#1cb808",
+              backgroundColor: "#000000ff",
               paddingVertical: 10,
               paddingHorizontal: 20,
               borderRadius: 10,
