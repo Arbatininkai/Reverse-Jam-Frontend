@@ -17,6 +17,7 @@ type Track = {
   name: string;
   artist: string;
   url: string;
+  originalUrl: string;
   coverUrl?: string;
   lyrics?: string;
 };
@@ -89,8 +90,8 @@ export default function OriginalSongListeningRoom() {
               )}
 
               <MusicPlayer
-                key={currentTrack.url}
-                audioUrl={currentTrack.url}
+                key={currentTrack.originalUrl}
+                audioUrl={currentTrack.originalUrl}
                 recorderState={{} as any}
                 startRecording={() => {}}
                 stopRecording={() => {}}
