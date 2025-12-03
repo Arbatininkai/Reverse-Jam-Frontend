@@ -14,6 +14,7 @@ import {
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   BackHandler,
   Image,
   ImageBackground,
@@ -137,13 +138,15 @@ export default function Game() {
       if (!response.ok) throw new Error("Upload failed:  " + response);
 
       // If this is not the final song, go to the next one
-      if (currentTrackIndex !== signalRLobby.totalRounds - 1) {
+      const totalRounds =
+        (signalRLobby && signalRLobby.totalRounds) || tracks.length || 1;
+      if (currentTrackIndex !== totalRounds - 1) {
         nextSong();
         setRecordedUri(null);
       } else {
         setCurrentTrack(null);
         setRecordedUri(null);
-        router.replace(`../game/listening-room?id=${id}`);
+        router.replace(`../game/original-song-listening-room?id=${id}&round=0`);
       }
     } catch (err) {
       console.error("Error uploading recording:", err);
@@ -190,25 +193,33 @@ export default function Game() {
               <Text style={styles.smallerText}>{currentTrack.artist}</Text>
               <Text style={styles.smallerText}>{currentTrack.name}</Text>
 
-              <Image
-                source={{ uri: currentTrack.coverUrl }}
-                style={{
-                  width: 240,
-                  height: 240,
-                  alignSelf: "center",
-                  marginTop: 20,
-                  borderRadius: 12,
-                }}
-              />
+              {currentTrack.coverUrl ? (
+                <Image
+                  source={{ uri: currentTrack.coverUrl }}
+                  style={{
+                    width: 240,
+                    height: 240,
+                    alignSelf: "center",
+                    marginTop: 20,
+                    borderRadius: 12,
+                  }}
+                />
+              ) : (
+                <ActivityIndicator color="white" />
+              )}
 
-              <MusicPlayer
-                key={currentTrack.url}
-                audioUrl={currentTrack.url}
-                recorderState={recorderState}
-                startRecording={startRecording}
-                stopRecording={stopRecording}
-                recordedUri={recordedUri}
-              />
+              {currentTrack.url ? (
+                <MusicPlayer
+                  key={currentTrack.url}
+                  audioUrl={currentTrack.url}
+                  recorderState={recorderState}
+                  startRecording={startRecording}
+                  stopRecording={stopRecording}
+                  recordedUri={recordedUri}
+                />
+              ) : (
+                <ActivityIndicator color="white" />
+              )}
 
               <Text style={styles.smallestText}>
                 {recordedUri
@@ -224,9 +235,15 @@ export default function Game() {
                   style={styles.button}
                 >
                   <Text style={styles.buttonText}>
-                    {currentTrackIndex !== signalRLobby.totalRounds - 1
-                      ? "Next Track"
-                      : "Submit Recordings"}
+                    {(() => {
+                      const totalRounds =
+                        (signalRLobby && signalRLobby.totalRounds) ||
+                        tracks.length ||
+                        1;
+                      return currentTrackIndex !== totalRounds - 1
+                        ? "Next Track"
+                        : "Submit Recordings";
+                    })()}
                   </Text>
                 </TouchableOpacity>
               )}

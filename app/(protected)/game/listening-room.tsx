@@ -65,7 +65,7 @@ export default function ListeningRoom() {
         if (!signalRLobby.humanRate) setIsHumanVoting(false);
         setAllRecordingsReady(true);
       }
-      //if (signalRLobby.aiRate) setAiVotingScore(currentRecording.score);
+      if (signalRLobby.aiRate) setAiVotingScore(currentRecording.aiScore);
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
   }, [signalRLobby]);
@@ -217,6 +217,9 @@ export default function ListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
+          <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
+            Listen To The Original
+          </Text>
           <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
             Listen To The Singers
           </Text>

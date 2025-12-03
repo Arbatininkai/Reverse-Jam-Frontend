@@ -11,6 +11,7 @@ interface MusicPlayerProps {
   startRecording: () => void;
   stopRecording: () => void;
   recordedUri: string | null;
+  showRecording?: boolean;
 }
 
 export default function MusicPlayer({
@@ -19,6 +20,7 @@ export default function MusicPlayer({
   startRecording,
   stopRecording,
   recordedUri,
+  showRecording = true,
 }: MusicPlayerProps) {
   const player = useAudioPlayer(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,30 +29,50 @@ export default function MusicPlayer({
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const loadRecording = async () => {
       if (!audioUrl || !player) return;
       try {
+        // Stop any current playback first
+        if (player.isLoaded) {
+          await player.pause();
+          await setIsAudioActiveAsync(false);
+        }
+
         setIsPlaying(false);
         setPosition(0);
         setIsReady(false);
         player.loop = false;
         await player.remove();
+
+        if (!isMounted) return;
+
         await player.replace({ uri: audioUrl });
 
-        player.volume = 0;
-        player.play();
-        player.pause();
-        await player.seekTo(0);
-        setIsAudioActiveAsync(false);
+        if (!isMounted) return;
 
-        setIsReady(true);
+        // Initialize without playing
+        await player.seekTo(0);
         player.volume = 1;
-        setIsAudioActiveAsync(true);
+        setIsReady(true);
       } catch (err) {
         console.error("Failed to load audio:", err);
       }
     };
     loadRecording();
+
+    return () => {
+      isMounted = false;
+      // Cleanup on unmount
+      if (player?.isLoaded) {
+        try {
+          player.pause();
+          setIsAudioActiveAsync(false);
+        } catch (err) {
+          // Ignore cleanup errors
+        }
+      }
+    };
   }, [audioUrl, player]);
 
   // Update playback status
@@ -93,24 +115,31 @@ export default function MusicPlayer({
     return () => cancelAnimationFrame(animationFrame);
   }, [player]);
 
-  const handlePress = () => {
+  const handlePress = async () => {
+    if (!player?.isLoaded || !isReady) return;
+
     if (isPlaying) {
-      player.pause();
+      await player.pause();
       setIsPlaying(false);
+      await setIsAudioActiveAsync(false);
     } else {
       // If song is over, reset to beginning
       if (player.currentTime >= player.duration && player.duration > 0) {
-        player.seekTo(0);
+        await player.seekTo(0);
         setPosition(0);
       }
-      player.play();
+      await setIsAudioActiveAsync(true);
+      await player.play();
       setIsPlaying(true);
     }
   };
 
-  const replaySong = () => {
-    player.seekTo(0);
-    player.play();
+  const replaySong = async () => {
+    if (!player?.isLoaded || !isReady) return;
+    await player.seekTo(0);
+    setPosition(0);
+    await setIsAudioActiveAsync(true);
+    await player.play();
     setIsPlaying(true);
   };
 
@@ -174,26 +203,28 @@ export default function MusicPlayer({
       </View>
 
       <View style={styles.songOptionsContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            recorderState.isRecording ? stopRecording() : startRecording()
-          }
-          disabled={recordedUri ? true : false}
-        >
-          <Feather
-            name="mic"
-            size={50}
-            color={
-              recorderState.isRecording
-                ? "#1cb808fa"
-                : recordedUri
-                ? "rgba(129, 126, 126, 0.98)"
-                : "#f1ededfa"
+        {showRecording && (
+          <TouchableOpacity
+            onPress={() =>
+              recorderState.isRecording ? stopRecording() : startRecording()
             }
-            style={styles.sideIcon}
             disabled={recordedUri ? true : false}
-          />
-        </TouchableOpacity>
+          >
+            <Feather
+              name="mic"
+              size={50}
+              color={
+                recorderState.isRecording
+                  ? "#1cb808fa"
+                  : recordedUri
+                  ? "rgba(129, 126, 126, 0.98)"
+                  : "#f1ededfa"
+              }
+              style={styles.sideIcon}
+              disabled={recordedUri ? true : false}
+            />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity onPress={handlePress}>
           <AntDesign
