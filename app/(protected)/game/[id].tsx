@@ -205,7 +205,6 @@ export default function Game() {
                 }}
               />
 
-
               <MusicPlayer
                 key={currentTrack.url}
                 audioUrl={currentTrack.url}

@@ -3,9 +3,6 @@ import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { styles } from "@/styles/styles";
 import { Storage } from "@/utils/utils";
-import { AntDesign } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
-import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -17,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
+import RecordingPlayer from "./recording-player";
 
 const API_BASE_URL =
   Platform.OS === "android"
@@ -107,54 +104,6 @@ export default function ListeningRoom() {
       connection.off("PlayerVoted");
     };
   }, [connectionRef.current]);
-
-  const player = useAudioPlayer();
-  const [isReady, setIsReady] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-      if (!currentRecording?.url || !player) return;
-      const load = async () => {
-          await player.remove();
-          await player.replace({ uri: currentRecording.url });
-          await player.seekTo(0);
-          setIsReady(true);
-      };
-      load();
-  }, [currentRecording]);
-
-  useEffect(() => {
-      if (!player || !isReady) return;
-      const sub = player.addListener("playbackStatusUpdate", (s) => {
-          setPosition(s.currentTime);
-          setDuration(s.duration);
-          if (s.didJustFinish) setIsPlaying(false);
-      });
-      return () => sub.remove();
-  }, [player, isReady]);
-
-  const togglePlay = async () => {
-    if (!isReady) return;
-
-    if (isPlaying) {
-      await player.pause();
-      await setIsAudioActiveAsync(false);
-    } else {
-      await setIsAudioActiveAsync(true);
-      await player.play();
-    }
-
-    setIsPlaying(!isPlaying);
-  };
-
-  const formatTime = (t: number) => {
-      const m = Math.floor(t / 60);
-      const s = Math.floor(t % 60).toString().padStart(2, "0");
-      return `${m}:${s}`;
-  };
-
 
   const handleEmojiPress = (score: number) => {
     if (!currentPlayer || isCurrentPlayerSelf) return;
@@ -287,41 +236,11 @@ export default function ListeningRoom() {
                     source={{ uri: currentPlayer.photoUrl }}
                     style={createStyles.bigPlayerIcon}
                   />
-                   <View
-                      style={{
-                          width: "85%",
-                          backgroundColor: "#ffffff22",
-                          paddingVertical: 20,
-                          borderRadius: 20,
-                          borderWidth: 2,
-                          borderColor: "#ffffffaa",
-                          alignItems: "center",
-                          marginTop: 20,
-                      }}
-                  >
-                      <Slider
-                          minimumValue={0}
-                          maximumValue={duration}
-                          value={position}
-                          onSlidingComplete={(v) => player.seekTo(v)}
-                          minimumTrackTintColor="#fff"
-                          maximumTrackTintColor="#ccc"
-                          thumbTintColor="#fff"
-                          style={{ width: "85%" }}
-                      />
-
-                      <Text style={styles.smallestText}>
-                          {formatTime(position)} / {formatTime(duration)}
-                      </Text>
-
-                      <TouchableOpacity onPress={togglePlay} style={{ marginTop: 10 }}>
-                          <AntDesign
-                              name={isPlaying ? "pausecircle" : "playcircle"}
-                              size={70}
-                              color="#fff"
-                          />
-                      </TouchableOpacity>
-                   </View>
+                  <RecordingPlayer
+                    key={currentRecording.url}
+                    title={currentRecording.fileName}
+                    uri={currentRecording.url}
+                  />
                 </View>
               )}
 

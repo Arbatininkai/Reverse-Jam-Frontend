@@ -1,4 +1,4 @@
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -108,43 +108,32 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
   };
 
   return (
-    <View
-      style={{
-        backgroundColor: "#1cb808fa",
-        padding: 10,
-        marginTop: 20,
-        marginBottom: 20,
-        borderRadius: 8,
-        flexDirection: "column",
-        justifyContent: "center",
-        gap: 3,
-        width: "35%",
-      }}
-    >
+    <View style={{ marginTop: 20, marginBottom: 20, alignItems: "center" }}>
       {isLoading ? (
-        <ActivityIndicator color="white" />
-      ) : isReady ? (
-        <>
-          <Text style={{ color: "white", fontSize: 12 }}>
-            {formatTime(position)} / {formatTime(player?.duration || 0)}
-          </Text>
-          <Text style={{ color: "white", fontSize: 16 }}>Play Recording</Text>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <TouchableOpacity
-              onPress={handlePlayPause}
-              style={{ alignSelf: "center" }}
-            >
-              <AntDesign
-                name={isPlaying ? "pause-circle" : "play-circle"}
-                size={40}
-                color="#fff"
-              />
-            </TouchableOpacity>
-            <MaterialCommunityIcons name="waveform" size={50} color="white" />
-          </View>
-        </>
+        <ActivityIndicator size="large" color="#fff" />
       ) : (
-        <Text style={{ color: "white" }}>Preparing audio...</Text>
+        <><TouchableOpacity
+            onPress={handlePlayPause}
+            style={{
+              width: 120,
+              height: 120,
+              borderRadius: 999,
+              backgroundColor: "#ffffff22",
+              borderWidth: 4,
+              borderColor: "white",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <MaterialIcons
+              name={isPlaying ? "pause-circle" : "play-circle"}
+              size={60}
+              color="white" 
+            />
+          </TouchableOpacity><Text style={{ color: "white", marginTop: 10 }}>
+              {formatTime(position)} / {formatTime(player?.duration || 0)}
+            </Text>
+        </>
       )}
     </View>
   );
