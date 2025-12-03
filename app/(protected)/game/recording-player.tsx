@@ -109,6 +109,10 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
 
   return (
     <View style={{ marginTop: 20, marginBottom: 20, alignItems: "center" }}>
+      <Text style={{ color: "white", marginBottom: 10 }}>
+      {formatTime(position)} / {formatTime(player?.duration || 0)}
+      </Text>
+
       {isLoading ? (
         <ActivityIndicator size="large" color="#fff" />
       ) : (
@@ -130,9 +134,7 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
               size={60}
               color="white" 
             />
-          </TouchableOpacity><Text style={{ color: "white", marginTop: 10 }}>
-              {formatTime(position)} / {formatTime(player?.duration || 0)}
-            </Text>
+          </TouchableOpacity>
         </>
       )}
     </View>
