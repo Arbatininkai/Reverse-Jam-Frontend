@@ -94,14 +94,14 @@ export default function FinalRoom() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Game Results</Text>
+          <Text style={styles.sectionTitleText}>Game Results</Text>
           <Text style={styles.smallerText}>Players: {playerCount}</Text>
 
           {sortedScores.length > 0 ? (
             <View
               style={{ width: "100%", alignItems: "center", marginTop: 20 }}
             >
-              <Text style={[styles.sectoinTitleText, { marginBottom: 20 }]}>
+              <Text style={[styles.sectionTitleText, { marginBottom: 20 }]}>
                 Final Scores
               </Text>
               {sortedScores.map((s, i) => {
@@ -141,7 +141,7 @@ export default function FinalRoom() {
                         Score: {s.score} points
                       </Text>
                     </View>
-                    <Text style={[styles.sectoinTitleText, { fontSize: 20 }]}>
+                    <Text style={[styles.sectionTitleText, { fontSize: 20 }]}>
                       #{i + 1}
                     </Text>
                   </View>
@@ -150,7 +150,7 @@ export default function FinalRoom() {
             </View>
           ) : (
             <View style={{ alignItems: "center", marginTop: 50 }}>
-              <Text style={styles.sectoinTitleText}>Calculating Scores...</Text>
+              <Text style={styles.sectionTitleText}>Calculating Scores...</Text>
               <Text style={styles.smallerText}>No scores available</Text>
             </View>
           )}

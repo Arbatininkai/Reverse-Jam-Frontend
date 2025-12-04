@@ -9,11 +9,13 @@ import { useContext, useEffect } from "react";
 import {
   Image,
   ImageBackground,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { styles } from "../../../styles/styles";
 
 export default function Waiting() {
@@ -23,8 +25,17 @@ export default function Waiting() {
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
 
+  const API_BASE_URL =
+    Platform.OS === "android"
+      ? process.env.EXPO_PUBLIC_ANDROID_URL
+      : process.env.EXPO_PUBLIC_BASE_URL;
+
   const { connectionRef, connectToLobby, startGame, lobby, setLobby } =
     useSignalR();
+
+  const joinUrl = lobby?.lobbyCode
+    ? `arbatininkai://join?seed=${encodeURIComponent(lobby.lobbyCode)}`
+    : "arbatininkai://join";
 
   useEffect(() => {
     const loadLobby = async () => {
@@ -88,6 +99,20 @@ export default function Waiting() {
             </View>
           </View>
 
+          <Text style={styles.smallerText}>
+            Share this QR code with your friends:
+          </Text>
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <QRCode
+              value={joinUrl}
+              size={200}
+              backgroundColor="white"
+              color="black"
+            />
+          </View>
+
           <Text style={styles.smallerText}>List of Players</Text>
           <Text style={styles.smallerText}>
             Player Count: {lobby?.players?.length || 0}/{lobby?.maxPlayers || 4}
@@ -97,7 +122,7 @@ export default function Waiting() {
             {lobby?.players?.map((player: any) => (
               <View key={player.id} style={createStyles.playerContainer}>
                 <Image
-                  source={{ uri: player.photoUrl || player.pholoUrl }}
+                  source={{ uri: player.photoUrl }}
                   style={createStyles.playerIcon}
                 />
                 <Text style={createStyles.playerName}>{player.name}</Text>

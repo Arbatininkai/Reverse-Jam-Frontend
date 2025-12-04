@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     textShadowRadius: 10,
     marginTop: 80,
   },
-  sectoinTitleText: {
+  sectionTitleText: {
     color: "white",
     fontSize: 35,
     fontWeight: "bold",
