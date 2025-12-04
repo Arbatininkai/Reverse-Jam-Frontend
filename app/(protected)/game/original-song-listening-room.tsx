@@ -67,7 +67,7 @@ export default function OriginalSongListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
+          <Text style={[styles.sectionTitleText, { marginTop: 80 }]}>
             Listen To The Original
           </Text>
 
