@@ -74,11 +74,12 @@ export default function Join() {
         setErrorMessage(null);
         await connectToLobby(normalizedSeed, tokenId);
         setIsJoining(true);
+        setHasAutoJoined(true);
       } catch (err) {
         console.error("Failed to join lobby via link:", err);
         setErrorMessage("Unable to join lobby from link.");
-      } finally {
-        setHasAutoJoined(true);
+        setHasAutoJoined(false);
+        setIsJoining(false);
       }
     };
 
@@ -139,7 +140,7 @@ export default function Join() {
             paddingBottom: 150,
           }}
         >
-          <Text style={styles.sectoinTitleText}>Join random lobby</Text>
+          <Text style={styles.sectionTitleText}>Join random lobby</Text>
 
           <TouchableOpacity
             style={styles.button}
@@ -148,7 +149,7 @@ export default function Join() {
             <Text style={styles.buttonText}>RANDOM LOBBY</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sectoinTitleText}>Enter seed</Text>
+          <Text style={styles.sectionTitleText}>Enter seed</Text>
 
           <TextInput
             style={[styles.button, styles.buttonText, { textAlign: "center" }]}

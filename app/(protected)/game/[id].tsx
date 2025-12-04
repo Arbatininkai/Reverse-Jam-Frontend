@@ -182,9 +182,9 @@ export default function Game() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
+          <Text style={styles.sectionTitleText}>Listen And Repeat</Text>
 
-          <Text style={styles.sectoinTitleText}>
+          <Text style={styles.sectionTitleText}>
             Round: {currentTrackIndex + 1}
           </Text>
 

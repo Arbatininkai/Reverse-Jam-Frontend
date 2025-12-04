@@ -140,7 +140,7 @@ export default function PlayerInformation() {
                   </Text>
 
                   {lobby.recordings
-                    .filter((recording: any) => recording?.userId === user?.id)
+                    ?.filter((recording: any) => recording?.userId === user?.id)
                     .map((recording: any) => (
                       <View
                         key={recording.id}
@@ -161,10 +161,7 @@ export default function PlayerInformation() {
                           <Text style={{ fontSize: 16, marginRight: 10 }}>
                             Round: {recording.round}
                           </Text>
-                          <RecordingPlayer
-                            title={recording.fileName}
-                            uri={recording.url}
-                          />
+                          <RecordingPlayer uri={recording.url} />
                         </View>
                       </View>
                     ))}

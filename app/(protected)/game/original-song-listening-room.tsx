@@ -28,7 +28,6 @@ export default function OriginalSongListeningRoom() {
   const { id, round } = useLocalSearchParams<{ id: string; round?: string }>();
   const router = useRouter();
 
-  const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
 
   const lobbyId = Array.isArray(id) ? id[0] : id;
@@ -45,7 +44,6 @@ export default function OriginalSongListeningRoom() {
 
       try {
         const parsed: Track[] = JSON.parse(storedSongs);
-        setTracks(parsed);
         const track = parsed[roundIndex] || parsed[0];
         setCurrentTrack(track);
       } catch {

@@ -19,7 +19,11 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
 
       try {
         if (player.isLoaded) {
-          await player.pause();
+          try {
+            await player.pause();
+          } catch (err) {
+            console.error("Failed to pause audio:", err);
+          }
           await setIsAudioActiveAsync(false);
         }
 

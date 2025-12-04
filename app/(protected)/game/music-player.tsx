@@ -118,19 +118,23 @@ export default function MusicPlayer({
   const handlePress = async () => {
     if (!player?.isLoaded || !isReady) return;
 
-    if (isPlaying) {
-      await player.pause();
-      setIsPlaying(false);
-      await setIsAudioActiveAsync(false);
-    } else {
-      // If song is over, reset to beginning
-      if (player.currentTime >= player.duration && player.duration > 0) {
-        await player.seekTo(0);
-        setPosition(0);
+    try {
+      if (isPlaying) {
+        await player.pause();
+        setIsPlaying(false);
+        await setIsAudioActiveAsync(false);
+      } else {
+        // If song is over, reset to beginning
+        if (player.currentTime >= player.duration && player.duration > 0) {
+          await player.seekTo(0);
+          setPosition(0);
+        }
+        await setIsAudioActiveAsync(true);
+        await player.play();
+        setIsPlaying(true);
       }
-      await setIsAudioActiveAsync(true);
-      await player.play();
-      setIsPlaying(true);
+    } catch (error) {
+      console.error(error);
     }
   };
 

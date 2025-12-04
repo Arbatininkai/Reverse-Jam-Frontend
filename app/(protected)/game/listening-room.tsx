@@ -217,13 +217,10 @@ export default function ListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
+          <Text style={[styles.sectionTitleText, { marginTop: 80 }]}>
             Listen To The Original
           </Text>
-          <Text style={[styles.sectoinTitleText, { marginTop: 80 }]}>
-            Listen To The Singers
-          </Text>
-          <Text style={styles.sectoinTitleText}>
+          <Text style={styles.sectionTitleText}>
             Round: {currentRound + 1} / {totalRounds}
           </Text>
           <Text style={styles.smallerText}>
@@ -231,7 +228,7 @@ export default function ListeningRoom() {
           </Text>
 
           {!allRecordingsReady ? (
-            <Text style={styles.sectoinTitleText}>
+            <Text style={styles.sectionTitleText}>
               Waiting for all players to submit their recordings...
             </Text>
           ) : (
