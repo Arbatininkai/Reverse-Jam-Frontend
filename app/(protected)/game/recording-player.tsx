@@ -67,16 +67,6 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
     };
 
     loadRecording();
-
-    return () => {
-      isMounted = false;
-      if (player?.isLoaded) {
-        try {
-          player.pause();
-          setIsAudioActiveAsync(false);
-        } catch (err) {}
-      }
-    };
   }, [recordedUri, player]);
 
   // Playback listener
@@ -138,10 +128,12 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
     <View
       style={{
         width: 120,
-        height: 120,
-        borderRadius: 999,
-        backgroundColor: "#ffffff22",
+        height: 110,
+        borderRadius: 30,
+        backgroundColor: "#983A3A",
         borderWidth: 4,
+        marginBottom: 15,
+        marginTop: 10,
         borderColor: "white",
         justifyContent: "center",
         alignItems: "center",
@@ -157,7 +149,7 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
 
           <TouchableOpacity
             onPress={handlePlayPause}
-            style={{ alignSelf: "center" }}
+            style={{ alignSelf: "center", marginTop: 5 }}
           >
             <AntDesign
               name={isPlaying ? "pause-circle" : "play-circle"}

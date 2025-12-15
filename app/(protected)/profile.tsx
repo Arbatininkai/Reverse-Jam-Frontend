@@ -91,6 +91,7 @@ export default function Profile() {
               paddingVertical: 10,
               paddingHorizontal: 20,
               borderRadius: 10,
+              marginTop: 10,
             }}
             onPress={() => router.push("./player-information")}
           >

@@ -19,7 +19,10 @@ export default function FinalRoom() {
   const { user } = useContext(AuthContext)!;
   const currentUserId = user?.id;
 
-  const { id, scores, players } = useLocalSearchParams();
+  const { id, scores, players, totalAiScore } = useLocalSearchParams();
+  const totalAiScoresPerUser = totalAiScore
+    ? JSON.parse(totalAiScore as string)
+    : {};
   const lobbyId = Array.isArray(id) ? id[0] : id;
   const { handleDeleteLobby, handleLeaveGame } = useLobbyManager();
   const [firstRender, setFirstRender] = useState(true);
@@ -42,8 +45,13 @@ export default function FinalRoom() {
   useEffect(() => {
     if (scores) {
       try {
-        setFinalScores(JSON.parse(scores as string));
-      } catch (err) {}
+        const parsed = JSON.parse(scores as string);
+        setFinalScores(Array.isArray(parsed) ? parsed : []);
+      } catch (err) {
+        setFinalScores([]);
+      }
+    } else {
+      setFinalScores([]);
     }
   }, [scores]);
 
@@ -75,11 +83,7 @@ export default function FinalRoom() {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => {
-            if (lobby?.players?.length === 1) {
-              handleDeleteLobby(lobbyId);
-            } else {
-              handleLeaveGame(lobbyId);
-            }
+            handleLeaveGame(lobbyId);
           }}
         >
           <Entypo name="cross" size={30} color="#ee2121ff" />
@@ -97,7 +101,60 @@ export default function FinalRoom() {
           <Text style={styles.sectionTitleText}>Game Results</Text>
           <Text style={styles.smallerText}>Players: {playerCount}</Text>
 
-          {sortedScores.length > 0 ? (
+          {sortedScores.length === 0 ? (
+            <View
+              style={{ width: "100%", alignItems: "center", marginTop: 20 }}
+            >
+              <Text style={[styles.sectionTitleText, { marginBottom: 20 }]}>
+                AI Scores
+              </Text>
+              {parsedPlayers.map((p: any, i: number) => {
+                return (
+                  <View
+                    key={p.id}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: getColor(i),
+                      padding: 15,
+                      borderRadius: 12,
+                      marginVertical: 8,
+                      width: "90%",
+                      borderWidth: p.id === currentUserId ? 3 : 0,
+                      borderColor: "#ee2121ff",
+                    }}
+                  >
+                    <Image
+                      source={{ uri: p.photoUrl }}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        marginRight: 15,
+                      }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[styles.smallerText, { fontWeight: "bold" }]}
+                      >
+                        {p.name} {p.id === currentUserId && "(You)"}
+                      </Text>
+                      <Text style={styles.smallestText}>
+                        AI Score:{" "}
+                        {totalAiScoresPerUser[p.id]
+                          ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
+                          : "0.00"}{" "}
+                        points
+                      </Text>
+                    </View>
+                    <Text style={[styles.sectionTitleText, { fontSize: 20 }]}>
+                      #{i + 1}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
             <View
               style={{ width: "100%", alignItems: "center", marginTop: 20 }}
             >
@@ -134,12 +191,21 @@ export default function FinalRoom() {
                       <Text
                         style={[styles.smallerText, { fontWeight: "bold" }]}
                       >
-                        {p?.name || "Unknown Player"}
-                        {s.userId === currentUserId && " (You)"}
+                        {p?.name || "Unknown Player"}{" "}
+                        {s.userId === currentUserId && "(You)"}
                       </Text>
                       <Text style={styles.smallestText}>
-                        Score: {s.score} points
+                        Score: {s.totalScore} points
                       </Text>
+                      {lobby.aiRate && (
+                        <Text style={styles.smallestText}>
+                          AI Score:{" "}
+                          {totalAiScoresPerUser[p.id]
+                            ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
+                            : "0.00"}{" "}
+                          points
+                        </Text>
+                      )}
                     </View>
                     <Text style={[styles.sectionTitleText, { fontSize: 20 }]}>
                       #{i + 1}
@@ -147,11 +213,6 @@ export default function FinalRoom() {
                   </View>
                 );
               })}
-            </View>
-          ) : (
-            <View style={{ alignItems: "center", marginTop: 50 }}>
-              <Text style={styles.sectionTitleText}>Calculating Scores...</Text>
-              <Text style={styles.smallerText}>No scores available</Text>
             </View>
           )}
         </ScrollView>

@@ -3,7 +3,7 @@ import { AntDesign, Feather } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface MusicPlayerProps {
   audioUrl: string;
@@ -60,19 +60,6 @@ export default function MusicPlayer({
       }
     };
     loadRecording();
-
-    return () => {
-      isMounted = false;
-      // Cleanup on unmount
-      if (player?.isLoaded) {
-        try {
-          player.pause();
-          setIsAudioActiveAsync(false);
-        } catch (err) {
-          // Ignore cleanup errors
-        }
-      }
-    };
   }, [audioUrl, player]);
 
   // Update playback status
@@ -87,7 +74,8 @@ export default function MusicPlayer({
       }
       if (status.didJustFinish) {
         if (player.isLoaded) {
-          player.pause(); // stop playback
+          player.pause();
+          player.seekTo(0);
         }
         setIsPlaying(false);
       }
@@ -116,7 +104,7 @@ export default function MusicPlayer({
   }, [player]);
 
   const handlePress = async () => {
-    if (!player?.isLoaded || !isReady) return;
+    if (!isReady) return;
 
     try {
       if (isPlaying) {
@@ -139,7 +127,7 @@ export default function MusicPlayer({
   };
 
   const replaySong = async () => {
-    if (!player?.isLoaded || !isReady) return;
+    if (!isReady) return;
     await player.seekTo(0);
     setPosition(0);
     await setIsAudioActiveAsync(true);
@@ -190,20 +178,26 @@ export default function MusicPlayer({
           justifyContent: "center",
         }}
       >
-        <Slider
-          minimumValue={0}
-          maximumValue={duration}
-          value={position}
-          onSlidingComplete={handleSeek}
-          thumbTintColor="#ee2121ff"
-          minimumTrackTintColor="#ee2121ff"
-          maximumTrackTintColor="#fff"
-          style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
-        />
+        {isReady && duration > 0 ? (
+          <>
+            <Slider
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={handleSeek}
+              thumbTintColor="#ee2121ff"
+              minimumTrackTintColor="#ee2121ff"
+              maximumTrackTintColor="#fff"
+              style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
+            />
 
-        <Text style={styles.smallestText}>
-          {formatTime(position)}/{formatTime(duration)}
-        </Text>
+            <Text style={styles.smallestText}>
+              {formatTime(position)}/{formatTime(duration)}
+            </Text>
+          </>
+        ) : (
+          <ActivityIndicator color="white" size={40} />
+        )}
       </View>
 
       <View style={styles.songOptionsContainer}>

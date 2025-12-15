@@ -18,6 +18,11 @@ export default function PlayerInformation() {
   const router = useRouter();
   const { user } = useContext(AuthContext)!;
   const [lobbies, setLobbies] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const PAGE_SIZE = 3;
 
   const API_BASE_URL =
     Platform.OS === "android"
@@ -25,32 +30,46 @@ export default function PlayerInformation() {
       : process.env.EXPO_PUBLIC_BASE_URL;
 
   useEffect(() => {
-    const getPlayerLobbies = async () => {
-      if (!user?.token) return;
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/Lobby/get-player-lobbies`,
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${user.token}` },
-          }
-        );
-
-        if (!response.ok) {
-          console.error("Server error:", response.status);
-          return;
-        }
-
-        const data = await response.json();
-        setLobbies(data);
-      } catch (error) {
-        console.error("Fetch error:", error);
-      }
-    };
-
-    getPlayerLobbies();
+    setLobbies([]);
+    setPage(1);
+    setHasMore(true);
+    getPlayerLobbies(1);
   }, [user?.token]);
+
+  const getPlayerLobbies = async (pageNumber: number) => {
+    if (!user?.token || isLoading || !hasMore) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/Lobby/user?page=${pageNumber}&pageSize=${PAGE_SIZE}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Server error:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.length < PAGE_SIZE) {
+        setHasMore(false);
+      }
+      console.log(data);
+
+      setLobbies((prev) => [...prev, ...data]);
+      setPage(pageNumber);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -61,7 +80,11 @@ export default function PlayerInformation() {
       >
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            setLobbies([]);
+            setPage(1);
+            router.back();
+          }}
         >
           <Ionicons name="arrow-back" size={28} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
@@ -100,74 +123,150 @@ export default function PlayerInformation() {
               {user?.name}
             </Text>
 
-            <View style={{ width: "100%" }}>
-              {lobbies.map((lobby) => (
-                <View
-                  key={lobby.id}
+            {lobbies.length > 0 ? (
+              <>
+                <Text
                   style={{
-                    marginBottom: 25,
-                    padding: 15,
-                    borderRadius: 15,
-                    backgroundColor: "#f0f0f0dc",
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    marginBottom: 10,
+                    textAlign: "center",
                   }}
                 >
-                  <View style={{ marginBottom: 10 }}>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Lobby ID: {lobby.id}
-                    </Text>
-                    <Text style={{ fontSize: 16, marginBottom: 3 }}>
-                      Total players: {lobby.totalPlayers}
-                    </Text>
-                    <Text style={{ fontSize: 16, marginBottom: 5 }}>
-                      Total rounds: {lobby.totalRounds}
-                    </Text>
-                  </View>
+                  Lobbies You Have Participated In
+                </Text>
 
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      fontWeight: "bold",
-                      marginBottom: 10,
-                    }}
-                  >
-                    Your recordings
-                  </Text>
-
-                  {lobby.recordings
-                    ?.filter((recording: any) => recording?.userId === user?.id)
-                    .map((recording: any) => (
+                <View style={{ width: "100%" }}>
+                  {lobbies.map((l, index) => {
+                    const lobby = l.lobby;
+                    return (
                       <View
-                        key={recording.id}
+                        key={lobby.id}
                         style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 10,
-                          justifyContent: "space-between",
+                          marginBottom: 25,
+                          padding: 15,
+                          borderRadius: 30,
+                          backgroundColor: "#ddb271ff",
                         }}
                       >
-                        <View
+                        <View style={{ marginBottom: 10 }}>
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: "bold",
+                              marginBottom: 5,
+                              textAlign: "center",
+                            }}
+                          >
+                            #{index + 1} Lobby Code: {lobby.lobbyCode}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              marginBottom: 3,
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            Total players: {lobby.players?.length || 0}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              marginBottom: 5,
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            Total rounds: {lobby.totalRounds || 0}
+                          </Text>
+                        </View>
+
+                        <Text
                           style={{
-                            flexDirection: "column",
-                            gap: 5,
-                            alignItems: "center",
+                            fontSize: 20,
+                            fontWeight: "bold",
+                            marginBottom: 10,
+                            textAlign: "center",
                           }}
                         >
-                          <Text style={{ fontSize: 16, marginRight: 10 }}>
-                            Round: {recording.round}
-                          </Text>
-                          <RecordingPlayer uri={recording.url} />
-                        </View>
+                          Your recordings:
+                        </Text>
+
+                        {lobby.recordings
+                          ?.filter(
+                            (recording: any) => recording.userId === user?.id
+                          )
+                          .map((recording: any) => (
+                            <View
+                              key={recording.id}
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                marginBottom: 10,
+                                justifyContent: "center",
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: "column",
+                                  gap: 5,
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 16,
+                                    marginRight: 10,
+                                    textAlign: "center",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  Round: {recording.round}
+                                </Text>
+                                <RecordingPlayer uri={recording.url} />
+                                {lobby.aiRate && (
+                                  <Text
+                                    style={{
+                                      fontSize: 16,
+                                      marginRight: 10,
+                                      textAlign: "center",
+                                      fontWeight: "600",
+                                    }}
+                                  >
+                                    AI Score:{" "}
+                                    {Number(recording.aiScore).toFixed(2)}/5
+                                  </Text>
+                                )}
+                              </View>
+                            </View>
+                          ))}
                       </View>
-                    ))}
+                    );
+                  })}
+                  {hasMore && (
+                    <TouchableOpacity
+                      style={[
+                        styles.button,
+                        { marginTop: 10, opacity: isLoading ? 0.6 : 1 },
+                      ]}
+                      onPress={() => getPlayerLobbies(page + 1)}
+                      disabled={isLoading}
+                    >
+                      <Text style={styles.buttonText}>
+                        {isLoading ? "Loading..." : "Load More"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              ))}
-            </View>
+              </>
+            ) : (
+              <Text
+                style={{ fontSize: 20, marginBottom: 5, textAlign: "center" }}
+              >
+                You have not participated in any lobbies yet.
+              </Text>
+            )}
           </View>
         </ScrollView>
       </ImageBackground>

@@ -68,6 +68,9 @@ export default function OriginalSongListeningRoom() {
           <Text style={[styles.sectionTitleText, { marginTop: 80 }]}>
             Listen To The Original
           </Text>
+          <Text style={[styles.sectionTitleText, { marginTop: 10 }]}>
+            Round: {roundIndex + 1}
+          </Text>
 
           {currentTrack && (
             <>

@@ -53,6 +53,8 @@ export default function Game() {
 
   const { lobby: signalRLobby } = useSignalR();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Make it so that the user cannot swipe back to the previous page
   useEffect(() => {
     const backHandler = () => true; // block hardware back
@@ -115,6 +117,7 @@ export default function Game() {
 
   const submitRecording = async () => {
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
       formData.append("File", {
         uri: recordedUri,
@@ -122,7 +125,7 @@ export default function Game() {
         type: "audio/m4a",
       } as any);
 
-      //formData.append("OriginalSongLyrics", currentTrack.lyrics);
+      formData.append("OriginalSongLyrics", currentTrack.lyrics);
 
       const response = await fetch(
         `${API_BASE_URL}/api/Recordings/upload/${id}/${currentTrackIndex}`,
@@ -140,6 +143,8 @@ export default function Game() {
       // If this is not the final song, go to the next one
       const totalRounds =
         (signalRLobby && signalRLobby.totalRounds) || tracks.length || 1;
+      setIsSubmitting(false);
+
       if (currentTrackIndex !== totalRounds - 1) {
         nextSong();
         setRecordedUri(null);
@@ -218,7 +223,7 @@ export default function Game() {
                   recordedUri={recordedUri}
                 />
               ) : (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color="white" size={50} />
               )}
 
               <Text style={styles.smallestText}>
@@ -229,24 +234,25 @@ export default function Game() {
 
               {recordedUri && <RecordingPlayer uri={recordedUri} />}
 
-              {recordedUri && (
-                <TouchableOpacity
-                  onPress={submitRecording}
-                  style={styles.button}
-                >
-                  <Text style={styles.buttonText}>
-                    {(() => {
-                      const totalRounds =
-                        (signalRLobby && signalRLobby.totalRounds) ||
-                        tracks.length ||
-                        1;
-                      return currentTrackIndex !== totalRounds - 1
-                        ? "Next Track"
-                        : "Submit Recordings";
-                    })()}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              {recordedUri &&
+                (!isSubmitting ? (
+                  <TouchableOpacity
+                    onPress={submitRecording}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>
+                      {(() => {
+                        const totalRounds =
+                          signalRLobby?.totalRounds || tracks.length || 1;
+                        return currentTrackIndex !== totalRounds - 1
+                          ? "Next Track"
+                          : "Submit Recordings";
+                      })()}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <ActivityIndicator color="white" size={70} />
+                ))}
             </>
           )}
         </ScrollView>

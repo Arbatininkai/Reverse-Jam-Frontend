@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import QRCode from "react-native-qrcode-svg";
 import { styles } from "../../../styles/styles";
 
 export default function Waiting() {
@@ -97,20 +96,6 @@ export default function Waiting() {
                 {lobby?.lobbyCode ? `#${lobby.lobbyCode}` : "#APDS"}
               </Text>
             </View>
-          </View>
-
-          <Text style={styles.smallerText}>
-            Share this QR code with your friends:
-          </Text>
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-          >
-            <QRCode
-              value={joinUrl}
-              size={200}
-              backgroundColor="white"
-              color="black"
-            />
           </View>
 
           <Text style={styles.smallerText}>List of Players</Text>
