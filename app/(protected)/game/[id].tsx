@@ -241,13 +241,9 @@ export default function Game() {
                     style={styles.button}
                   >
                     <Text style={styles.buttonText}>
-                      {(() => {
-                        const totalRounds =
-                          signalRLobby?.totalRounds || tracks.length || 1;
-                        return currentTrackIndex !== totalRounds - 1
-                          ? "Next Track"
-                          : "Submit Recordings";
-                      })()}
+                      {currentTrackIndex !== signalRLobby?.totalRounds - 1
+                        ? "Next Track"
+                        : "Submit Recordings"}
                     </Text>
                   </TouchableOpacity>
                 ) : (

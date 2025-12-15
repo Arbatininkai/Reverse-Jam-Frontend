@@ -17,7 +17,6 @@ export default function Join() {
   const router = useRouter();
   const [buttonText, setButtonText] = useState("");
   const [isJoining, setIsJoining] = useState(false);
-  const [hasAutoJoined, setHasAutoJoined] = useState(false);
   const codeLength = 6;
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
@@ -57,41 +56,6 @@ export default function Join() {
       console.error("Failed to join random lobby:", err);
     }
   };
-
-  // Automatically join when coming from a deep link with a seed
-  useEffect(() => {
-    if (
-      !normalizedSeed ||
-      normalizedSeed.length !== codeLength ||
-      hasAutoJoined
-    ) {
-      return;
-    }
-
-    setButtonText(normalizedSeed);
-    const joinFromLink = async () => {
-      try {
-        setErrorMessage(null);
-        await connectToLobby(normalizedSeed, tokenId);
-        setIsJoining(true);
-        setHasAutoJoined(true);
-      } catch (err) {
-        console.error("Failed to join lobby via link:", err);
-        setErrorMessage("Unable to join lobby from link.");
-        setHasAutoJoined(false);
-        setIsJoining(false);
-      }
-    };
-
-    joinFromLink();
-  }, [
-    normalizedSeed,
-    codeLength,
-    tokenId,
-    hasAutoJoined,
-    connectToLobby,
-    setErrorMessage,
-  ]);
 
   // Redirect to waiting room if found active lobby and if user clicked one of the join buttons
   useEffect(() => {
