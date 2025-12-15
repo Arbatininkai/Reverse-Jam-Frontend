@@ -130,7 +130,12 @@ export default function ListeningRoom() {
       return;
     }
 
-    await calculateFinalScores();
+    try {
+      await calculateFinalScores();
+    } catch (err) {
+      console.error("Error calculating final scores:", err);
+      alert("Failed to calculate final scores. Please try again.");
+    }
   };
 
   const handleSubmitVote = async () => {
