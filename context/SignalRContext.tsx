@@ -135,9 +135,10 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (lobbyData.hasGameStarted && roundChanged) {
           console.log("CHANGED ROOM");
-          router.replace(
-            `../game/original-song-listening-room?id=${lobbyData.id}&round=${currentRound}`
-          );
+          router.replace({
+            pathname: '../game/original-song-listening-room',
+            params: { id: lobbyData.id, round: currentRound }
+          });
         }
 
         return lobbyData;
