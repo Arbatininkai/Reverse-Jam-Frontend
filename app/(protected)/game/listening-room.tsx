@@ -70,7 +70,7 @@ export default function ListeningRoom() {
       }
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
-  }, [signalRLobby, recordings, currentRecording]);
+  }, [signalRLobby, recordings]);
 
   useEffect(() => {
     if (!signalRLobby) return;
