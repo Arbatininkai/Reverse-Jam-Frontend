@@ -34,7 +34,6 @@ export default function ListeningRoom() {
   const [allRecordingsReady, setAllRecordingsReady] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [aiVotingScore, setAiVotingScore] = useState(null);
   const [isHumanVoting, setIsHumanVoting] = useState(true);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
   const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
@@ -53,8 +52,13 @@ export default function ListeningRoom() {
   const isCurrentPlayerSelf = currentPlayer?.id === currentUserId;
   const isLastPlayer = currentIndex === playerCount - 1;
   const isLastRound = currentRound === totalRounds - 1;
+  const aiVotingScore =
+    lobby?.aiRate && currentRecording?.aiScore != null
+      ? currentRecording.aiScore
+      : null;
 
   useEffect(() => {
+    console.log(signalRLobby);
     if (signalRLobby && recordings.length > 0) {
       if (
         recordings.length ===
@@ -64,9 +68,6 @@ export default function ListeningRoom() {
         setLobby(signalRLobby);
         if (!signalRLobby.humanRate) setIsHumanVoting(false);
         setAllRecordingsReady(true);
-      }
-      if (signalRLobby.aiRate && currentRecording) {
-        setAiVotingScore(currentRecording.aiScore);
       }
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
@@ -87,6 +88,7 @@ export default function ListeningRoom() {
         const files = await response.json();
 
         setRecordings(files);
+        console.log("Recordings fetched:", files);
       } catch (err) {
         console.error("Error fetching recordings:", err);
       }
@@ -335,7 +337,7 @@ export default function ListeningRoom() {
                 </TouchableOpacity>
               )}
 
-              {aiVotingScore !== null && (
+              {currentRecording?.aiScore != null && lobby?.aiRate && (
                 <View
                   style={{
                     flexDirection: "column",

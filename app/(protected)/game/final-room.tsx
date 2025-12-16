@@ -106,7 +106,7 @@ export default function FinalRoom() {
               style={{ width: "100%", alignItems: "center", marginTop: 20 }}
             >
               <Text style={[styles.sectionTitleText, { marginBottom: 20 }]}>
-                AI Scores
+                Final Scores
               </Text>
               {parsedPlayers.map((p: any, i: number) => {
                 return (
@@ -125,7 +125,7 @@ export default function FinalRoom() {
                     }}
                   >
                     {p?.emoji ? (
-                      <Text style={{ fontSize: 50 }}>
+                      <Text style={{ fontSize: 45 }}>
                         {String.fromCodePoint(parseInt(p.emoji, 16))}
                       </Text>
                     ) : (
@@ -140,13 +140,22 @@ export default function FinalRoom() {
                       >
                         {p.name} {p.id === currentUserId && "(You)"}
                       </Text>
-                      <Text style={styles.smallestText}>
-                        Total AI Score:{" "}
-                        {totalAiScoresPerUser[p.id]
-                          ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
-                          : "0.00"}{" "}
-                        points
-                      </Text>
+                      {lobby?.aiRate && (
+                        <Text style={styles.smallestText}>
+                          Total AI Score:{" "}
+                          {totalAiScoresPerUser[p.id]
+                            ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
+                            : "0.00"}{" "}
+                          points
+                        </Text>
+                      )}
+                      {parsedPlayers?.length == 1 &&
+                        lobby?.humanRate &&
+                        !lobby?.aiRate && (
+                          <Text style={styles.smallestText}>
+                            No Scores Available
+                          </Text>
+                        )}
                     </View>
                     <Text style={[styles.sectionTitleText, { fontSize: 20 }]}>
                       #{i + 1}

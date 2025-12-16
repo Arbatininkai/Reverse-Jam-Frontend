@@ -122,22 +122,10 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
         const roundChanged =
           prevRound !== undefined && currentRound !== prevRound;
 
-        console.log(
-          "Lobby updated",
-          lobbyData,
-          "prevRound",
-          prevRound,
-          "currentRound",
-          currentRound,
-          "roundChanged",
-          roundChanged
-        );
-
         if (lobbyData.hasGameStarted && roundChanged) {
-          console.log("CHANGED ROOM");
           router.replace({
-            pathname: '../game/original-song-listening-room',
-            params: { id: lobbyData.id, round: currentRound }
+            pathname: "../game/original-song-listening-room",
+            params: { id: lobbyData.id, round: currentRound },
           });
         }
 
@@ -161,11 +149,15 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     connection.on("PlayerWon", (winner) => {
       console.log("Winner: ", winner);
       if (winner.id === user?.id) {
-        setUser((prev: any) => ({
-          ...prev,
-          totalWins: winner.totalWins,
-        }));
-        Storage.setItem("user", JSON.stringify(winner));
+        setUser((prev: any) => {
+          const updatedUser = {
+            ...prev,
+            totalWins: winner.totalWins,
+          };
+          console.log("Updated user:", updatedUser);
+          Storage.setItem("user", JSON.stringify(updatedUser));
+          return updatedUser;
+        });
       }
     });
 
