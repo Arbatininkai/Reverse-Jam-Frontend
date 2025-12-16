@@ -1,45 +1,34 @@
 import { AuthContext } from "@/context/AuthContext";
+import { loginStyles } from "@/styles/loginStyles";
+import { styles } from "@/styles/styles";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
-import { useContext, useEffect, useState } from "react";
-import { ImageBackground, Text, TouchableOpacity, View } from "react-native";
-import { styles } from "../styles/styles";
+import React, { useContext } from "react";
+import { ImageBackground, Text, View } from "react-native";
 
 export default function Index() {
   const auth = useContext(AuthContext)!;
   const router = useRouter();
-  const [hasRedirected, setHasRedirected] = useState(false);
-
-  // If user is logged in, redirect to home page
-  useEffect(() => {
-    if (auth.isLoggedIn && !hasRedirected) {
-      setHasRedirected(true);
-      router.replace("/main");
-    }
-  }, [auth.isLoggedIn, hasRedirected]);
-
-  // If already logged in, don't render the component
-  if (auth.isLoggedIn) {
-    return null;
-  }
 
   return (
-    <View style={styles.container}>
+    <View style={loginStyles.container}>
       <ImageBackground
-        source={require("../assets/images/music-background.png")}
+        source={require("../assets/images/main-background.png")}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <View style={styles.contentContainer}>
-          <Text style={styles.welcomeText}>Welcome</Text>
+        
 
-          <TouchableOpacity
-            style={styles.playButton}
-            onPress={() => router.push("/login")}
-          >
-            <Text style={styles.playButtonText}>Play</Text>
-          </TouchableOpacity>
-
-
+        <View style={loginStyles.formContainer}>
+          <Text style={loginStyles.label}>Login with Google</Text>
+          <Text style={loginStyles.label}>Sign in to access your account</Text>
+          <GoogleSigninButton
+            style={loginStyles.googleButton}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
+            onPress={auth.loginWithGoogle}
+            disabled={false}
+          />
         </View>
       </ImageBackground>
     </View>
