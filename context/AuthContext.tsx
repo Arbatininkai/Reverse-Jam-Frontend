@@ -33,15 +33,11 @@ type AuthContextType = {
 
 const API_BASE_URL =
   Platform.OS === "android"
-    ? process.env.EXPO_PUBLIC_ANDROID_URL || "http://10.0.2.2:5000"
-    : process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:5000";
+    ? process.env.EXPO_PUBLIC_ANDROID_URL
+    : process.env.EXPO_PUBLIC_BASE_URL;
 
-const WEB_CLIENT_ID =
-  process.env.EXPO_PUBLIC_WEB_CLIENT_ID ||
-  "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com";
-const IOS_CLIENT_ID =
-  process.env.EXPO_PUBLIC_IOS_CLIENT_ID ||
-  "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com";
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -164,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
+      setIsAuthLoading(false);
 
       // Handle specific errors
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
