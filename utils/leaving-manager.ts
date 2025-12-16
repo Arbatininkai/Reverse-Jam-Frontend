@@ -50,11 +50,6 @@ export function useLobbyManager() {
       console.error("Error calling LeaveLobby:", err);
     }
 
-    // Only delete lobby if last player
-    if (signalRLobby.players.length < 1) {
-      await handleDeleteLobby(id);
-    }
-
     router.replace("../main");
   };
 

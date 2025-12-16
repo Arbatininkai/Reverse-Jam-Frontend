@@ -3,7 +3,7 @@ import { AntDesign, Feather } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface MusicPlayerProps {
   audioUrl: string;
@@ -11,6 +11,7 @@ interface MusicPlayerProps {
   startRecording: () => void;
   stopRecording: () => void;
   recordedUri: string | null;
+  showRecording?: boolean;
 }
 
 export default function MusicPlayer({
@@ -19,6 +20,7 @@ export default function MusicPlayer({
   startRecording,
   stopRecording,
   recordedUri,
+  showRecording = true,
 }: MusicPlayerProps) {
   const player = useAudioPlayer(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,25 +29,32 @@ export default function MusicPlayer({
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const loadRecording = async () => {
       if (!audioUrl || !player) return;
       try {
+        // Stop any current playback first
+        if (player.isLoaded) {
+          await player.pause();
+          await setIsAudioActiveAsync(false);
+        }
+
         setIsPlaying(false);
         setPosition(0);
         setIsReady(false);
         player.loop = false;
         await player.remove();
+
+        if (!isMounted) return;
+
         await player.replace({ uri: audioUrl });
 
-        player.volume = 0;
-        player.play();
-        player.pause();
-        await player.seekTo(0);
-        setIsAudioActiveAsync(false);
+        if (!isMounted) return;
 
-        setIsReady(true);
+        // Initialize without playing
+        await player.seekTo(0);
         player.volume = 1;
-        setIsAudioActiveAsync(true);
+        setIsReady(true);
       } catch (err) {
         console.error("Failed to load audio:", err);
       }
@@ -65,7 +74,8 @@ export default function MusicPlayer({
       }
       if (status.didJustFinish) {
         if (player.isLoaded) {
-          player.pause(); // stop playback
+          player.pause();
+          player.seekTo(0);
         }
         setIsPlaying(false);
       }
@@ -93,24 +103,35 @@ export default function MusicPlayer({
     return () => cancelAnimationFrame(animationFrame);
   }, [player]);
 
-  const handlePress = () => {
-    if (isPlaying) {
-      player.pause();
-      setIsPlaying(false);
-    } else {
-      // If song is over, reset to beginning
-      if (player.currentTime >= player.duration && player.duration > 0) {
-        player.seekTo(0);
-        setPosition(0);
+  const handlePress = async () => {
+    if (!isReady) return;
+
+    try {
+      if (isPlaying) {
+        await player.pause();
+        setIsPlaying(false);
+        await setIsAudioActiveAsync(false);
+      } else {
+        // If song is over, reset to beginning
+        if (player.currentTime >= player.duration && player.duration > 0) {
+          await player.seekTo(0);
+          setPosition(0);
+        }
+        await setIsAudioActiveAsync(true);
+        await player.play();
+        setIsPlaying(true);
       }
-      player.play();
-      setIsPlaying(true);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const replaySong = () => {
-    player.seekTo(0);
-    player.play();
+  const replaySong = async () => {
+    if (!isReady) return;
+    await player.seekTo(0);
+    setPosition(0);
+    await setIsAudioActiveAsync(true);
+    await player.play();
     setIsPlaying(true);
   };
 
@@ -157,43 +178,51 @@ export default function MusicPlayer({
           justifyContent: "center",
         }}
       >
-        <Slider
-          minimumValue={0}
-          maximumValue={duration}
-          value={position}
-          onSlidingComplete={handleSeek}
-          thumbTintColor="#ee2121ff"
-          minimumTrackTintColor="#ee2121ff"
-          maximumTrackTintColor="#fff"
-          style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
-        />
+        {isReady && duration > 0 ? (
+          <>
+            <Slider
+              minimumValue={0}
+              maximumValue={duration}
+              value={position}
+              onSlidingComplete={handleSeek}
+              thumbTintColor="#ee2121ff"
+              minimumTrackTintColor="#ee2121ff"
+              maximumTrackTintColor="#fff"
+              style={{ width: "60%", alignSelf: "center", marginTop: 20 }}
+            />
 
-        <Text style={styles.smallestText}>
-          {formatTime(position)}/{formatTime(duration)}
-        </Text>
+            <Text style={styles.smallestText}>
+              {formatTime(position)}/{formatTime(duration)}
+            </Text>
+          </>
+        ) : (
+          <ActivityIndicator color="white" size={40} />
+        )}
       </View>
 
       <View style={styles.songOptionsContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            recorderState.isRecording ? stopRecording() : startRecording()
-          }
-          disabled={recordedUri ? true : false}
-        >
-          <Feather
-            name="mic"
-            size={50}
-            color={
-              recorderState.isRecording
-                ? "#1cb808fa"
-                : recordedUri
-                ? "rgba(129, 126, 126, 0.98)"
-                : "#f1ededfa"
+        {showRecording && (
+          <TouchableOpacity
+            onPress={() =>
+              recorderState.isRecording ? stopRecording() : startRecording()
             }
-            style={styles.sideIcon}
             disabled={recordedUri ? true : false}
-          />
-        </TouchableOpacity>
+          >
+            <Feather
+              name="mic"
+              size={50}
+              color={
+                recorderState.isRecording
+                  ? "#1cb808fa"
+                  : recordedUri
+                  ? "rgba(129, 126, 126, 0.98)"
+                  : "#f1ededfa"
+              }
+              style={styles.sideIcon}
+              disabled={recordedUri ? true : false}
+            />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity onPress={handlePress}>
           <AntDesign

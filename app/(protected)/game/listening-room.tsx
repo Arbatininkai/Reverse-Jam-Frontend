@@ -2,7 +2,6 @@ import { AuthContext } from "@/context/AuthContext";
 import { useSignalR } from "@/context/SignalRContext";
 import { createStyles } from "@/styles/createStyles";
 import { styles } from "@/styles/styles";
-import { Storage } from "@/utils/utils";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -32,6 +31,7 @@ export default function ListeningRoom() {
   const [lobby, setLobby] = useState<any>(null);
   const [recordings, setRecordings] = useState<any[]>([]);
   const { lobby: signalRLobby, nextPlayer, connectionRef } = useSignalR();
+  const [allRecordingsReady, setAllRecordingsReady] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [aiVotingScore, setAiVotingScore] = useState(null);
@@ -42,7 +42,7 @@ export default function ListeningRoom() {
 
   const playerCount = lobby?.players?.length || 0;
   const totalRounds = lobby?.totalRounds || 1;
-  const canOwnerAdvance = voteCount >= playerCount - 1;
+  const canOwnerAdvance = voteCount >= playerCount - 1 || !isHumanVoting;
 
   const currentPlayer = lobby?.players?.[currentIndex];
   const currentRound = lobby?.currentRound || 0;
@@ -50,27 +50,34 @@ export default function ListeningRoom() {
     (r) => r.userId === currentPlayer?.id && r.round === currentRound + 1
   );
 
-  const allRecordingsReady = recordings.length === playerCount * totalRounds;
   const isCurrentPlayerSelf = currentPlayer?.id === currentUserId;
   const isLastPlayer = currentIndex === playerCount - 1;
   const isLastRound = currentRound === totalRounds - 1;
 
   useEffect(() => {
-    if (signalRLobby) {
-      setLobby(signalRLobby);
-      //if (signalRLobby.aiRate) setAiVotingScore(currentRecording.score);
-      if (!signalRLobby.humanRate) setIsHumanVoting(false);
-      Storage.setItem(`lobby-${id}`, JSON.stringify(signalRLobby));
+    if (signalRLobby && recordings.length > 0) {
+      if (
+        recordings.length ===
+          signalRLobby.players.length * signalRLobby.totalRounds &&
+        !allRecordingsReady
+      ) {
+        setLobby(signalRLobby);
+        if (!signalRLobby.humanRate) setIsHumanVoting(false);
+        setAllRecordingsReady(true);
+      }
+      if (signalRLobby.aiRate && currentRecording) {
+        setAiVotingScore(currentRecording.aiScore);
+      }
       setCurrentIndex(signalRLobby?.currentPlayerIndex || 0);
     }
-  }, [signalRLobby]);
+  }, [signalRLobby, recordings]);
 
   useEffect(() => {
-    if (!lobby) return;
+    if (!signalRLobby) return;
     const fetchRecordings = async () => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/Recordings/${lobby.lobbyCode}/recordings`,
+          `${API_BASE_URL}/api/Recordings/${signalRLobby.lobbyCode}/recordings`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${tokenId}` },
@@ -85,7 +92,7 @@ export default function ListeningRoom() {
       }
     };
     fetchRecordings();
-  }, [lobby]);
+  }, [signalRLobby]);
 
   useEffect(() => {
     setSelectedScore(null);
@@ -109,6 +116,25 @@ export default function ListeningRoom() {
     if (!currentPlayer || isCurrentPlayerSelf) return;
     setSelectedScore(score);
     console.log(`Selected rating ${score} for ${currentPlayer.name}`);
+  };
+
+  const handleNextAction = async () => {
+    if (!isLastPlayer) {
+      nextPlayer(Number(id));
+      return;
+    }
+
+    if (!isLastRound) {
+      nextPlayer(Number(id));
+      return;
+    }
+
+    try {
+      await calculateFinalScores();
+    } catch (err) {
+      console.error("Error calculating final scores:", err);
+      alert("Failed to calculate final scores. Please try again.");
+    }
   };
 
   const handleSubmitVote = async () => {
@@ -165,12 +191,25 @@ export default function ListeningRoom() {
           body: JSON.stringify(lobby.lobbyCode),
         }
       );
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to submit vote: ${errorText}`);
+      let result;
+      if (response.ok) {
+        result = await response.json();
+      } else {
+        result = { scores: [] };
       }
-      const result = await response.json();
       console.log("Final scores calculated:", result);
+
+      const totalAiScoresPerUser = recordings?.reduce((acc, recording) => {
+        const userId = recording.userId;
+        const aiScore = recording.aiScore || 0;
+
+        if (!acc[userId]) {
+          acc[userId] = 0;
+        }
+
+        acc[userId] += aiScore;
+        return acc;
+      }, {} as Record<number, number>);
 
       router.replace({
         pathname: "/(protected)/game/final-room",
@@ -179,6 +218,7 @@ export default function ListeningRoom() {
           lobbyCode: lobby.lobbyCode,
           scores: JSON.stringify(result.scores),
           players: JSON.stringify(lobby.players),
+          totalAiScore: JSON.stringify(totalAiScoresPerUser),
         },
       });
       if (connectionRef.current) {
@@ -212,8 +252,10 @@ export default function ListeningRoom() {
           contentContainerStyle={{ alignItems: "center", paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Listen To The Singers</Text>
-          <Text style={styles.sectoinTitleText}>
+          <Text style={[styles.sectionTitleText, { marginTop: 80 }]}>
+            Listen To The Singers
+          </Text>
+          <Text style={styles.sectionTitleText}>
             Round: {currentRound + 1} / {totalRounds}
           </Text>
           <Text style={styles.smallerText}>
@@ -221,7 +263,7 @@ export default function ListeningRoom() {
           </Text>
 
           {!allRecordingsReady ? (
-            <Text style={styles.sectoinTitleText}>
+            <Text style={styles.sectionTitleText}>
               Waiting for all players to submit their recordings...
             </Text>
           ) : (
@@ -232,10 +274,16 @@ export default function ListeningRoom() {
                     {currentPlayer.name} is singing
                     {isCurrentPlayerSelf && " (You)"}
                   </Text>
-                  <Image
-                    source={{ uri: currentPlayer.photoUrl }}
-                    style={createStyles.bigPlayerIcon}
-                  />
+                  {currentPlayer?.emoji ? (
+                    <Text style={{ fontSize: 80 }}>
+                      {String.fromCodePoint(parseInt(currentPlayer.emoji, 16))}
+                    </Text>
+                  ) : (
+                    <Image
+                      source={{ uri: currentPlayer?.photoUrl }}
+                      style={createStyles.playerIcon}
+                    />
+                  )}
                   <RecordingPlayer
                     key={currentRecording.url}
                     title={currentRecording.fileName}
@@ -244,7 +292,7 @@ export default function ListeningRoom() {
                 </View>
               )}
 
-              {!isCurrentPlayerSelf && !hasSubmittedVote && (
+              {!isCurrentPlayerSelf && !hasSubmittedVote && isHumanVoting && (
                 <>
                   <View style={styles.wideButton}>
                     {emojis.map((item, index) => (
@@ -273,7 +321,7 @@ export default function ListeningRoom() {
                 </>
               )}
 
-              {!isCurrentPlayerSelf && !hasSubmittedVote && (
+              {!isCurrentPlayerSelf && !hasSubmittedVote && isHumanVoting && (
                 <TouchableOpacity
                   style={[
                     styles.button,
@@ -293,16 +341,29 @@ export default function ListeningRoom() {
                     flexDirection: "column",
                     alignItems: "center",
                     gap: 10,
-                    marginTop: 20,
+                    marginTop: 0,
                   }}
                 >
+                  <Text style={styles.mediumText}>
+                    {isCurrentPlayerSelf
+                      ? "AI Has Rated Your Recording"
+                      : `AI rating for ${currentPlayer?.name}`}
+                  </Text>
                   <Text style={styles.emojiText}>
                     {emojis[Math.round(aiVotingScore)].emoji}
                   </Text>
                   <Text style={styles.smallestText}>
-                    AI rating: {aiVotingScore}/5 for {currentPlayer?.name}
+                    AI rating: {Number(aiVotingScore).toFixed(2)}/5
                   </Text>
                 </View>
+              )}
+
+              {(isCurrentPlayerSelf || hasSubmittedVote) && isHumanVoting && (
+                <Text style={styles.smallestText}>
+                  {isCurrentPlayerSelf
+                    ? "Other players are rating your recording..."
+                    : "Vote submitted! Waiting for next player..."}
+                </Text>
               )}
 
               {(lobby?.ownerId === user?.id ||
@@ -312,41 +373,23 @@ export default function ListeningRoom() {
                     styles.button,
                     {
                       backgroundColor: "#3b82f6",
-                      marginTop: 10,
+                      marginTop: 20,
                     },
                     !canOwnerAdvance && { opacity: 0.5 },
                   ]}
                   onPress={async () => {
-                    if (!canOwnerAdvance && isHumanVoting) {
-                      alert(
-                        `Waiting for ${
-                          playerCount - 1 - voteCount
-                        } more players to vote`
-                      );
-                      return;
-                    }
-                    if (!isLastPlayer || !isLastRound) {
-                      nextPlayer(Number(id));
-                    } else {
-                      await calculateFinalScores();
-                    }
+                    handleNextAction();
                   }}
                   disabled={!canOwnerAdvance}
                 >
                   <Text style={styles.buttonText}>
-                    {!isLastPlayer || !isLastRound
+                    {!isLastPlayer
                       ? "Next Player"
+                      : !isLastRound
+                      ? "Go To Next Round"
                       : "View Final Scores"}
                   </Text>
                 </TouchableOpacity>
-              )}
-
-              {(isCurrentPlayerSelf || hasSubmittedVote) && (
-                <Text style={styles.smallestText}>
-                  {isCurrentPlayerSelf
-                    ? "Other players are rating your recording..."
-                    : "Vote submitted! Waiting for next player..."}
-                </Text>
               )}
             </>
           )}

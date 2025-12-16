@@ -14,6 +14,7 @@ import {
 import { useGlobalSearchParams, useRouter } from "expo-router";
 import { useContext, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   BackHandler,
   Image,
   ImageBackground,
@@ -51,6 +52,8 @@ export default function Game() {
   const tokenId = user?.token;
 
   const { lobby: signalRLobby } = useSignalR();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Make it so that the user cannot swipe back to the previous page
   useEffect(() => {
@@ -114,6 +117,7 @@ export default function Game() {
 
   const submitRecording = async () => {
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
       formData.append("File", {
         uri: recordedUri,
@@ -121,7 +125,7 @@ export default function Game() {
         type: "audio/m4a",
       } as any);
 
-      //formData.append("OriginalSongLyrics", currentTrack.lyrics);
+      formData.append("OriginalSongLyrics", currentTrack.lyrics);
 
       const response = await fetch(
         `${API_BASE_URL}/api/Recordings/upload/${id}/${currentTrackIndex}`,
@@ -137,13 +141,17 @@ export default function Game() {
       if (!response.ok) throw new Error("Upload failed:  " + response);
 
       // If this is not the final song, go to the next one
-      if (currentTrackIndex !== signalRLobby.totalRounds - 1) {
+      const totalRounds =
+        (signalRLobby && signalRLobby.totalRounds) || tracks.length || 1;
+      setIsSubmitting(false);
+
+      if (currentTrackIndex !== totalRounds - 1) {
         nextSong();
         setRecordedUri(null);
       } else {
         setCurrentTrack(null);
         setRecordedUri(null);
-        router.replace(`../game/listening-room?id=${id}`);
+        router.replace(`../game/original-song-listening-room?id=${id}&round=0`);
       }
     } catch (err) {
       console.error("Error uploading recording:", err);
@@ -179,9 +187,9 @@ export default function Game() {
           }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectoinTitleText}>Listen And Repeat</Text>
+          <Text style={styles.sectionTitleText}>Listen And Repeat</Text>
 
-          <Text style={styles.sectoinTitleText}>
+          <Text style={styles.sectionTitleText}>
             Round: {currentTrackIndex + 1}
           </Text>
 
@@ -190,25 +198,33 @@ export default function Game() {
               <Text style={styles.smallerText}>{currentTrack.artist}</Text>
               <Text style={styles.smallerText}>{currentTrack.name}</Text>
 
-              <Image
-                source={{ uri: currentTrack.coverUrl }}
-                style={{
-                  width: 240,
-                  height: 240,
-                  alignSelf: "center",
-                  marginTop: 20,
-                  borderRadius: 12,
-                }}
-              />
+              {currentTrack.coverUrl ? (
+                <Image
+                  source={{ uri: currentTrack.coverUrl }}
+                  style={{
+                    width: 240,
+                    height: 240,
+                    alignSelf: "center",
+                    marginTop: 20,
+                    borderRadius: 12,
+                  }}
+                />
+              ) : (
+                <ActivityIndicator color="white" />
+              )}
 
-              <MusicPlayer
-                key={currentTrack.url}
-                audioUrl={currentTrack.url}
-                recorderState={recorderState}
-                startRecording={startRecording}
-                stopRecording={stopRecording}
-                recordedUri={recordedUri}
-              />
+              {currentTrack.url ? (
+                <MusicPlayer
+                  key={currentTrack.url}
+                  audioUrl={currentTrack.url}
+                  recorderState={recorderState}
+                  startRecording={startRecording}
+                  stopRecording={stopRecording}
+                  recordedUri={recordedUri}
+                />
+              ) : (
+                <ActivityIndicator color="white" size={50} />
+              )}
 
               <Text style={styles.smallestText}>
                 {recordedUri
@@ -218,18 +234,21 @@ export default function Game() {
 
               {recordedUri && <RecordingPlayer uri={recordedUri} />}
 
-              {recordedUri && (
-                <TouchableOpacity
-                  onPress={submitRecording}
-                  style={styles.button}
-                >
-                  <Text style={styles.buttonText}>
-                    {currentTrackIndex !== signalRLobby.totalRounds - 1
-                      ? "Next Track"
-                      : "Submit Recordings"}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              {recordedUri &&
+                (!isSubmitting ? (
+                  <TouchableOpacity
+                    onPress={submitRecording}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>
+                      {currentTrackIndex !== signalRLobby?.totalRounds - 1
+                        ? "Next Track"
+                        : "Submit Recordings"}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <ActivityIndicator color="white" size={70} />
+                ))}
             </>
           )}
         </ScrollView>

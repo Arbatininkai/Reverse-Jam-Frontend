@@ -92,7 +92,7 @@ export default function Join() {
             paddingBottom: 150,
           }}
         >
-          <Text style={styles.sectoinTitleText}>Join random lobby</Text>
+          <Text style={styles.sectionTitleText}>Join random lobby</Text>
 
           <TouchableOpacity
             style={styles.button}
@@ -101,7 +101,7 @@ export default function Join() {
             <Text style={styles.buttonText}>RANDOM LOBBY</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sectoinTitleText}>Enter seed</Text>
+          <Text style={styles.sectionTitleText}>Enter seed</Text>
 
           <TextInput
             style={[styles.button, styles.buttonText, { textAlign: "center" }]}
@@ -109,7 +109,10 @@ export default function Join() {
             placeholderTextColor="#ffffff"
             value={buttonText}
             onChangeText={(text) => {
-              const cleaned = text.slice(0, 6);
+              const cleaned = text
+                .replace(/[^a-zA-Z0-9]/g, "")
+                .toUpperCase()
+                .slice(0, codeLength);
               setButtonText(cleaned);
               setErrorMessage(null);
             }}

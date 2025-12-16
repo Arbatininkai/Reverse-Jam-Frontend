@@ -55,7 +55,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
         );
         if (!response.ok) {
           const msg = await response.text();
-          setErrorMessage(msg || "Lobby not found");
+          setErrorMessage("Lobby not found");
           return;
         }
       }
@@ -115,7 +115,35 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
 
     connection.on("LobbyUpdated", (lobbyData: any) => {
       console.log("Lobby updated:", lobbyData);
-      setLobby(lobbyData);
+      setLobby((prevLobby: any) => {
+        const prevRound = prevLobby?.currentRound;
+        const currentRound = lobbyData.currentRound;
+
+        const roundChanged =
+          prevRound !== undefined && currentRound !== prevRound;
+
+        console.log(
+          "Lobby updated",
+          lobbyData,
+          "prevRound",
+          prevRound,
+          "currentRound",
+          currentRound,
+          "roundChanged",
+          roundChanged
+        );
+
+        if (lobbyData.hasGameStarted && roundChanged) {
+          console.log("CHANGED ROOM");
+          router.replace({
+            pathname: '../game/original-song-listening-room',
+            params: { id: lobbyData.id, round: currentRound }
+          });
+        }
+
+        return lobbyData;
+      });
+
       Storage.setItem(`lobby-${lobbyData.id}`, JSON.stringify(lobbyData));
     });
 
