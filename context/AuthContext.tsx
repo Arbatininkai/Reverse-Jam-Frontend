@@ -15,6 +15,7 @@ type User = {
   photoUrl?: string;
   token: string;
   totalWins: number;
+  emoji?: string;
 } | null;
 
 type DecodedToken = {
@@ -133,6 +134,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           );
         }
 
+        console.log("STATUS:", backendResponse.status);
+        console.log("RAW RESPONSE:", backendResponse);
         const responseData = await backendResponse.json();
         console.log("Backend response:", responseData);
 
@@ -147,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           photoUrl: responseData.user.photoUrl,
           token: responseData.token,
           totalWins: responseData.user.totalWins,
+          emoji: responseData.user.emoji,
         });
 
         setIsLoggedIn(true);

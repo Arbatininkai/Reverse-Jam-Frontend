@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     textShadowRadius: 10,
     marginTop: 80,
   },
-  sectoinTitleText: {
+  sectionTitleText: {
     color: "white",
     fontSize: 35,
     fontWeight: "bold",
@@ -34,6 +34,16 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
     marginTop: 20,
+    marginBottom: 10,
+  },
+  mediumText: {
+    color: "white",
+    fontSize: 26,
+    fontWeight: "bold",
+    textAlign: "center",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 5, height: 5 },
+    textShadowRadius: 10,
   },
   jam: {
     color: "#FFC62B",
@@ -178,6 +188,7 @@ export const styles = StyleSheet.create({
     color: "#fc1a1aff",
     fontWeight: "bold",
     fontSize: 25,
+    marginBottom: 5,
     textShadowColor: "#000",
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 10,
@@ -263,7 +274,7 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 60,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderBottomColor: "black",
+    borderBottomColor: "white",
     transform: [{ rotate: "-90deg" }],
   },
 
@@ -277,7 +288,7 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 60,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderBottomColor: "black",
+    borderBottomColor: "white",
     transform: [{ rotate: "90deg" }],
   },
   wideButton: {

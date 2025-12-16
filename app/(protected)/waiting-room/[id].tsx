@@ -96,10 +96,17 @@ export default function Waiting() {
           <View style={createStyles.playerBox}>
             {lobby?.players?.map((player: any) => (
               <View key={player.id} style={createStyles.playerContainer}>
-                <Image
-                  source={{ uri: player.photoUrl || player.pholoUrl }}
-                  style={createStyles.playerIcon}
-                />
+                {player?.emoji ? (
+                  <Text style={{ fontSize: 30 }}>
+                    {String.fromCodePoint(parseInt(player.emoji, 16))}
+                  </Text>
+                ) : (
+                  <Image
+                    source={{ uri: player?.photoUrl }}
+                    style={createStyles.playerIcon}
+                  />
+                )}
+
                 <Text style={createStyles.playerName}>{player.name}</Text>
               </View>
             ))}

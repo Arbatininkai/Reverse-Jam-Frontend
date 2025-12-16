@@ -90,7 +90,7 @@ export default function Name() {
               style={styles.triangleRight}
             ></TouchableOpacity>
           </View>
-          <Text style={styles.sectoinTitleText}>Change name</Text>
+          <Text style={styles.sectionTitleText}>Change name</Text>
 
           <TextInput
             style={[styles.button, styles.buttonText, { textAlign: "center" }]}

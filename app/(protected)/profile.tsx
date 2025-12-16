@@ -1,6 +1,6 @@
 import { AuthContext } from "@/context/AuthContext";
 import { styles } from "@/styles/styles";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useContext } from "react";
 import {
@@ -46,17 +46,23 @@ export default function Profile() {
             marginTop: 80,
           }}
         >
-          <Image
-            source={{ uri: user?.photoUrl }}
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: 60,
-              borderWidth: 2,
-              borderColor: "#000000ff",
-              marginBottom: 20,
-            }}
-          />
+          {user?.emoji ? (
+            <Text style={{ fontSize: 100 }}>
+              {String.fromCodePoint(parseInt(user.emoji, 16))}
+            </Text>
+          ) : (
+            <Image
+              source={{ uri: user?.photoUrl }}
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                borderWidth: 3,
+                borderColor: "#1cb808",
+                marginBottom: 20,
+              }}
+            />
+          )}
 
           <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
             {user?.name}
@@ -77,10 +83,28 @@ export default function Profile() {
               paddingHorizontal: 20,
               borderRadius: 10,
             }}
-            onPress={() => router.push("/name")}
+            onPress={() => router.push("./name")}
           >
             <MaterialIcons name="edit" size={20} color="#fff" />
             <Text style={{ color: "#fff", marginLeft: 8 }}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#e09f13ff",
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 10,
+              marginTop: 10,
+            }}
+            onPress={() => router.push("./player-information")}
+          >
+            <AntDesign name="inbox" size={20} color="white" />
+            <Text style={{ color: "#fff", marginLeft: 8 }}>
+              See Lobby Participations
+            </Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>

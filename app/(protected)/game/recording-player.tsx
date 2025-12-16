@@ -1,4 +1,4 @@
-import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -9,43 +9,60 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  let didRun = false;
   const player = useAudioPlayer(undefined);
 
 
   useEffect(() => {
+    let isMounted = true;
     const loadRecording = async () => {
-      if (didRun) return;
-      didRun = true;
-
       if (!recordedUri || !player) return;
 
       try {
+        if (player.isLoaded) {
+          try {
+            await player.pause();
+          } catch (err) {
+            console.error("Failed to pause audio:", err);
+          }
+          await setIsAudioActiveAsync(false);
+        }
+
         setIsLoading(true);
         setIsReady(false);
         setIsPlaying(false);
         setPosition(0);
 
-       
         await player.remove();
         player.loop = false;
 
-        
+        if (!isMounted) return;
+
         await player.replace({ uri: recordedUri });
+
+        if (!isMounted) return;
+
         await player.seekTo(0);
-        player.pause();
+        await player.pause();
 
         let tries = 0;
-        while (tries < 20 && (!player.duration || player.duration === 0)) {
+        while (
+          tries < 20 &&
+          isMounted &&
+          (!player.duration || player.duration === 0)
+        ) {
           await new Promise((r) => setTimeout(r, 100));
           tries++;
         }
 
-        setIsReady(true);
+        if (isMounted) {
+          setIsReady(true);
+        }
       } catch (err) {
         console.error("Failed to load audio:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -110,41 +127,37 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
   return (
     <View
       style={{
-        backgroundColor: "#1cb808fa",
-        padding: 10,
-        marginTop: 20,
-        marginBottom: 20,
-        borderRadius: 8,
-        flexDirection: "column",
+        width: 120,
+        height: 110,
+        borderRadius: 30,
+        backgroundColor: "#983A3A",
+        borderWidth: 4,
+        marginBottom: 15,
+        marginTop: 10,
+        borderColor: "white",
         justifyContent: "center",
-        gap: 3,
-        width: "35%",
+        alignItems: "center",
       }}
     >
       {isLoading ? (
-        <ActivityIndicator color="white" />
-      ) : isReady ? (
+        <ActivityIndicator size="large" color="#fff" />
+      ) : (
         <>
           <Text style={{ color: "white", fontSize: 12 }}>
             {formatTime(position)} / {formatTime(player?.duration || 0)}
           </Text>
-          <Text style={{ color: "white", fontSize: 16 }}>Play Recording</Text>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <TouchableOpacity
-              onPress={handlePlayPause}
-              style={{ alignSelf: "center" }}
-            >
-              <AntDesign
-                name={isPlaying ? "pause-circle" : "play-circle"}
-                size={40}
-                color="#fff"
-              />
-            </TouchableOpacity>
-            <MaterialCommunityIcons name="waveform" size={50} color="white" />
-          </View>
+
+          <TouchableOpacity
+            onPress={handlePlayPause}
+            style={{ alignSelf: "center", marginTop: 5 }}
+          >
+            <AntDesign
+              name={isPlaying ? "pause-circle" : "play-circle"}
+              size={40}
+              color="#fff"
+            />
+          </TouchableOpacity>
         </>
-      ) : (
-        <Text style={{ color: "white" }}>Preparing audio...</Text>
       )}
     </View>
   );
