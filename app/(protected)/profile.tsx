@@ -46,17 +46,23 @@ export default function Profile() {
             marginTop: 80,
           }}
         >
-          <Image
-            source={{ uri: user?.photoUrl }}
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: 60,
-              borderWidth: 3,
-              borderColor: "#1cb808",
-              marginBottom: 20,
-            }}
-          />
+          {user?.emoji ? (
+            <Text style={{ fontSize: 100 }}>
+              {String.fromCodePoint(parseInt(user.emoji, 16))}
+            </Text>
+          ) : (
+            <Image
+              source={{ uri: user?.photoUrl }}
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                borderWidth: 3,
+                borderColor: "#1cb808",
+                marginBottom: 20,
+              }}
+            />
+          )}
 
           <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
             {user?.name}

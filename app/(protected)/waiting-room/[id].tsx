@@ -9,7 +9,6 @@ import { useContext, useEffect } from "react";
 import {
   Image,
   ImageBackground,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -24,17 +23,8 @@ export default function Waiting() {
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
 
-  const API_BASE_URL =
-    Platform.OS === "android"
-      ? process.env.EXPO_PUBLIC_ANDROID_URL
-      : process.env.EXPO_PUBLIC_BASE_URL;
-
   const { connectionRef, connectToLobby, startGame, lobby, setLobby } =
     useSignalR();
-
-  const joinUrl = lobby?.lobbyCode
-    ? `arbatininkai://join?seed=${encodeURIComponent(lobby.lobbyCode)}`
-    : "arbatininkai://join";
 
   useEffect(() => {
     const loadLobby = async () => {
@@ -106,10 +96,17 @@ export default function Waiting() {
           <View style={createStyles.playerBox}>
             {lobby?.players?.map((player: any) => (
               <View key={player.id} style={createStyles.playerContainer}>
-                <Image
-                  source={{ uri: player.photoUrl }}
-                  style={createStyles.playerIcon}
-                />
+                {player?.emoji ? (
+                  <Text style={{ fontSize: 30 }}>
+                    {String.fromCodePoint(parseInt(player.emoji, 16))}
+                  </Text>
+                ) : (
+                  <Image
+                    source={{ uri: player?.photoUrl }}
+                    style={createStyles.playerIcon}
+                  />
+                )}
+
                 <Text style={createStyles.playerName}>{player.name}</Text>
               </View>
             ))}

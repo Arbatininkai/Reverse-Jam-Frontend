@@ -87,7 +87,6 @@ export default function ListeningRoom() {
         const files = await response.json();
 
         setRecordings(files);
-        console.log("Recordings fetched:", files);
       } catch (err) {
         console.error("Error fetching recordings:", err);
       }
@@ -212,8 +211,6 @@ export default function ListeningRoom() {
         return acc;
       }, {} as Record<number, number>);
 
-      console.log(totalAiScoresPerUser);
-
       router.replace({
         pathname: "/(protected)/game/final-room",
         params: {
@@ -277,10 +274,16 @@ export default function ListeningRoom() {
                     {currentPlayer.name} is singing
                     {isCurrentPlayerSelf && " (You)"}
                   </Text>
-                  <Image
-                    source={{ uri: currentPlayer.photoUrl }}
-                    style={createStyles.bigPlayerIcon}
-                  />
+                  {currentPlayer?.emoji ? (
+                    <Text style={{ fontSize: 80 }}>
+                      {String.fromCodePoint(parseInt(currentPlayer.emoji, 16))}
+                    </Text>
+                  ) : (
+                    <Image
+                      source={{ uri: currentPlayer?.photoUrl }}
+                      style={createStyles.playerIcon}
+                    />
+                  )}
                   <RecordingPlayer
                     key={currentRecording.url}
                     title={currentRecording.fileName}

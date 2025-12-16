@@ -1,7 +1,7 @@
 import { useSignalR } from "@/context/SignalRContext";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ImageBackground,
   Text,
@@ -21,18 +21,6 @@ export default function Join() {
   const { user } = useContext(AuthContext)!;
   const tokenId = user?.token;
   const { connectToLobby, lobby, errorMessage, setErrorMessage } = useSignalR();
-  const { seed } = useLocalSearchParams<{ seed?: string }>();
-
-  const normalizedSeed = useMemo(() => {
-    if (!seed || typeof seed !== "string") {
-      return null;
-    }
-
-    return seed
-      .replace(/[^a-zA-Z0-9]/g, "")
-      .toUpperCase()
-      .slice(0, codeLength);
-  }, [seed]);
 
   const handleJoinRandomLobby = async () => {
     try {

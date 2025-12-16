@@ -124,15 +124,16 @@ export default function FinalRoom() {
                       borderColor: "#ee2121ff",
                     }}
                   >
-                    <Image
-                      source={{ uri: p.photoUrl }}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        marginRight: 15,
-                      }}
-                    />
+                    {p?.emoji ? (
+                      <Text style={{ fontSize: 50 }}>
+                        {String.fromCodePoint(parseInt(p.emoji, 16))}
+                      </Text>
+                    ) : (
+                      <Image
+                        source={{ uri: p?.photoUrl }}
+                        style={p.playerIcon}
+                      />
+                    )}
                     <View style={{ flex: 1 }}>
                       <Text
                         style={[styles.smallerText, { fontWeight: "bold" }]}
@@ -140,7 +141,7 @@ export default function FinalRoom() {
                         {p.name} {p.id === currentUserId && "(You)"}
                       </Text>
                       <Text style={styles.smallestText}>
-                        AI Score:{" "}
+                        Total AI Score:{" "}
                         {totalAiScoresPerUser[p.id]
                           ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
                           : "0.00"}{" "}
@@ -178,15 +179,16 @@ export default function FinalRoom() {
                       borderColor: "#ee2121ff",
                     }}
                   >
-                    <Image
-                      source={{ uri: p?.photoUrl }}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 25,
-                        marginRight: 15,
-                      }}
-                    />
+                    {p?.emoji ? (
+                      <Text style={{ fontSize: 50 }}>
+                        {String.fromCodePoint(parseInt(p.emoji, 16))}
+                      </Text>
+                    ) : (
+                      <Image
+                        source={{ uri: p?.photoUrl }}
+                        style={p.playerIcon}
+                      />
+                    )}
                     <View style={{ flex: 1 }}>
                       <Text
                         style={[styles.smallerText, { fontWeight: "bold" }]}
@@ -199,7 +201,7 @@ export default function FinalRoom() {
                       </Text>
                       {lobby.aiRate && (
                         <Text style={styles.smallestText}>
-                          AI Score:{" "}
+                          Total AI Score:{" "}
                           {totalAiScoresPerUser[p.id]
                             ? Number(totalAiScoresPerUser[p.id]).toFixed(2)
                             : "0.00"}{" "}
