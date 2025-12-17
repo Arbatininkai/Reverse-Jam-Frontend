@@ -130,14 +130,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             body: JSON.stringify(idToken),
           }
         );
-
         if (!backendResponse.ok) {
           const errorData = await backendResponse.json();
           throw new Error(
             errorData.message || `Backend error: ${backendResponse.status}`
           );
         }
-
         const responseData = await backendResponse.json();
         console.log("Backend response:", responseData);
 

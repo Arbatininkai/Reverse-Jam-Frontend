@@ -13,8 +13,8 @@
         "EXPO_PUBLIC_ANDROID_CLIENT_ID": "945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com",
         "EXPO_PUBLIC_IOS_CLIENT_ID": "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com",
 
-        "EXPOEXPO_PUBLIC_ANDROID_URL": "http://10.0.2.2:5000",
-        "EXPO_PUBLIC_BASE_URL": "http://localhost:5000"
+        "EXPOEXPO_PUBLIC_ANDROID_URL": "http://16.16.202.136:5000",
+        "EXPO_PUBLIC_BASE_URL": "http://16.16.202.136:5000"
       }
     },
     "development-simulator": {
@@ -25,16 +25,28 @@
       }
     },
     "preview": {
-      "distribution": "internal"
-    },
-    "production": {
-      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_WEB_CLIENT_ID": "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com",
         "EXPO_PUBLIC_ANDROID_CLIENT_ID": "945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com",
         "EXPO_PUBLIC_IOS_CLIENT_ID": "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com",
-        "EXPO_PUBLIC_ANDROID_URL": "http://10.0.2.2:5000",
-        "EXPO_PUBLIC_BASE_URL": "http://localhost:5000"
+        "EXPO_PUBLIC_ANDROID_URL": "http://16.16.202.136:5000",
+        "EXPO_PUBLIC_BASE_URL": "http://16.16.202.136:5000"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_WEB_CLIENT_ID": "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com",
+        "EXPO_PUBLIC_ANDROID_CLIENT_ID": "945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com",
+        "EXPO_PUBLIC_IOS_CLIENT_ID": "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com",
+        "EXPO_PUBLIC_ANDROID_URL": "http://16.16.202.136:5000",
+        "EXPO_PUBLIC_BASE_URL": "http://16.16.202.136:5000"
       }
     }
   },
