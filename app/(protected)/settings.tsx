@@ -40,7 +40,7 @@ export default function Settings() {
             onPress={() => router.push("/name")}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Change Name</Text>
+            <Text style={styles.buttonText}>Change Profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

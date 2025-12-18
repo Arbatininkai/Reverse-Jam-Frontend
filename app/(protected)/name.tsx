@@ -6,6 +6,7 @@ import React, { useContext, useState } from "react";
 import {
   ImageBackground,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -15,7 +16,7 @@ import { styles } from "../../styles/styles";
 
 export default function Name() {
   const router = useRouter();
-  const icons = ["\u{1F600}", "🤠", "🥸", "😎", "🧐"];
+  const icons = ["1F600", "1F920", "1F978", "1F60E", "1F9D0"];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextIcon = () => {
@@ -24,6 +25,10 @@ export default function Name() {
 
   const prevIcon = () => {
     setCurrentIndex((prev) => (prev - 1 + icons.length) % icons.length);
+  };
+
+  const unicodeToEmoji = (unicode: string) => {
+    return String.fromCodePoint(parseInt(unicode, 16));
   };
 
   const { user, setUser } = useContext(AuthContext)!;
@@ -37,23 +42,24 @@ export default function Name() {
       : process.env.EXPO_PUBLIC_BASE_URL;
 
   const saveName = async () => {
-    const response = await fetch(`${API_BASE_URL}/api/Player/name-change`, {
-      method: "PUT",
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-name`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${tokenId}`,
       },
-      body: JSON.stringify({ 
-        name: buttonText, 
-        emoji: icons[currentIndex] 
+      body: JSON.stringify({
+        Name: buttonText,
+        Emoji: icons[currentIndex],
       }),
     });
+    console.log(response);
 
     if (response.ok) {
-      const updatedUser = { 
-        ...user!, 
-        name: buttonText, 
-        emoji: icons[currentIndex] 
+      const updatedUser = {
+        ...user!,
+        name: buttonText,
+        emoji: icons[currentIndex],
       };
       setUser(updatedUser);
       await Storage.setItem("user", JSON.stringify(updatedUser));
@@ -74,38 +80,53 @@ export default function Name() {
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.pageTitle}>Select Icon😃</Text>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 40,
+            alignItems: "center",
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.pageTitle}>Select Icon 😃</Text>
 
-        <View style={{ alignItems: "center", gap: 10 }}>
-          <Text style={{ fontSize: 200 }}>{icons[currentIndex]}</Text>
+          <View style={{ alignItems: "center", gap: 10 }}>
+            <Text style={{ fontSize: 200 }}>
+              {unicodeToEmoji(icons[currentIndex])}
+            </Text>
 
-          <View style={{ flexDirection: "row", gap: 20 }}>
-            <TouchableOpacity
-              onPress={prevIcon}
-              style={styles.triangleLeft}
-            ></TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 20 }}>
+              <TouchableOpacity
+                onPress={prevIcon}
+                style={styles.triangleLeft}
+              ></TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={nextIcon}
-              style={styles.triangleRight}
-            ></TouchableOpacity>
+              <TouchableOpacity
+                onPress={nextIcon}
+                style={styles.triangleRight}
+              ></TouchableOpacity>
+            </View>
+            <Text style={styles.sectionTitleText}>Change name</Text>
+
+            <TextInput
+              style={[
+                styles.button,
+                styles.buttonText,
+                { textAlign: "center" },
+              ]}
+              placeholder="Enter name"
+              placeholderTextColor="#ffffff"
+              value={buttonText}
+              onChangeText={setButtonText}
+              keyboardType="numeric"
+              maxLength={17}
+            />
+
+            <TouchableOpacity style={styles.button} onPress={saveName}>
+              <Text style={styles.buttonText}>SAVE</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.sectionTitleText}>Change name</Text>
-
-          <TextInput
-            style={[styles.button, styles.buttonText, { textAlign: "center" }]}
-            placeholder="Enter name"
-            placeholderTextColor="#ffffff"
-            value={buttonText}
-            onChangeText={setButtonText}
-            keyboardType="numeric"
-            maxLength={17}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={saveName}>
-            <Text style={styles.buttonText}>SAVE</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </ImageBackground>
     </View>
   );
