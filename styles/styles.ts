@@ -159,15 +159,16 @@ export const styles = StyleSheet.create({
     paddingRight: 26,
     paddingBottom: 11,
     paddingLeft: 26,
-    marginBottom: 30,
-    
+    marginBottom: 20,
+
     shadowColor: "#000",
     shadowOffset: {
       width: 10,
       height: 10,
     },
-   
+
     shadowRadius: 20,
+    shadowOpacity: 0.25,
     elevation: 5,
     justifyContent: "center",
     alignItems: "center",

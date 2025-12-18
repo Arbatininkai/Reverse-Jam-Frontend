@@ -26,21 +26,18 @@ type AuthContextType = {
   user: User;
   isLoggedIn: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  isAuthLoading: boolean;
   loginWithGoogle: () => void;
   logout: () => void;
 };
 
 const API_BASE_URL =
   Platform.OS === "android"
-    ? process.env.EXPO_PUBLIC_ANDROID_URL || "http://10.0.2.2:5000"
-    : process.env.EXPO_PUBLIC_BASE_URL || "http://localhost:5000";
+    ? process.env.EXPO_PUBLIC_ANDROID_URL
+    : process.env.EXPO_PUBLIC_BASE_URL;
 
-const WEB_CLIENT_ID =
-  process.env.EXPO_PUBLIC_WEB_CLIENT_ID ||
-  "945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com";
-const IOS_CLIENT_ID =
-  process.env.EXPO_PUBLIC_IOS_CLIENT_ID ||
-  "945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com";
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_CLIENT_ID;
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID;
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -58,10 +55,12 @@ GoogleSignin.configure({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   // If user was previously logged in, restore their token and user data
   useEffect(() => {
     const loadUser = async () => {
+      setIsAuthLoading(true);
       try {
         const token = await Storage.getItem("token");
         const userStr = await Storage.getItem("user");
@@ -78,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (!res.ok) {
               console.log("Failed to fetch user info, clearing storage");
+              setIsAuthLoading(false);
               await Storage.removeItem("token");
               await Storage.removeItem("user");
               return;
@@ -86,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser({ ...user, token });
             await Storage.setItem("user", JSON.stringify(user));
             setIsLoggedIn(true);
+            setIsAuthLoading(false);
             router.replace("/main");
             console.log("Restored user:", user);
           } else {
@@ -98,6 +99,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log("Failed to restore user:", err);
         await Storage.removeItem("token");
         await Storage.removeItem("user");
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     loadUser();
@@ -115,6 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const idToken = userInfo.data?.idToken;
 
       if (idToken) {
+        setIsAuthLoading(true);
         console.log("Got Google ID Token");
 
         // Send ID token to backend for verification and authentication
@@ -126,16 +130,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             body: JSON.stringify(idToken),
           }
         );
-
         if (!backendResponse.ok) {
           const errorData = await backendResponse.json();
           throw new Error(
             errorData.message || `Backend error: ${backendResponse.status}`
           );
         }
-
-        console.log("STATUS:", backendResponse.status);
-        console.log("RAW RESPONSE:", backendResponse);
         const responseData = await backendResponse.json();
         console.log("Backend response:", responseData);
 
@@ -158,6 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
+      setIsAuthLoading(false);
 
       // Handle specific errors
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -174,15 +175,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Sign out from Google
+      // Sign out from Googl
       await GoogleSignin.signOut();
 
       // Clear local state
       setUser(null);
       setIsLoggedIn(false);
+      setIsAuthLoading(false);
       await Storage.removeItem("token");
       await Storage.removeItem("user");
-      router.replace("/");
 
       console.log("Logged out successfully");
     } catch (error) {
@@ -192,7 +193,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, isLoggedIn, loginWithGoogle, logout }}
+      value={{
+        user,
+        setUser,
+        isLoggedIn,
+        isAuthLoading,
+        loginWithGoogle,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
