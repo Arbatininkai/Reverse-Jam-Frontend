@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React, { useContext, useState } from "react";
 import {
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
@@ -53,7 +54,6 @@ export default function Name() {
         Emoji: icons[currentIndex],
       }),
     });
-    console.log(response);
 
     if (response.ok) {
       const updatedUser = {
@@ -63,6 +63,7 @@ export default function Name() {
       };
       setUser(updatedUser);
       await Storage.setItem("user", JSON.stringify(updatedUser));
+      router.back();
     }
   };
 
@@ -80,53 +81,60 @@ export default function Name() {
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingBottom: 40,
-            alignItems: "center",
-          }}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          style={{ flex: 1, width: "100%" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
         >
-          <Text style={styles.pageTitle}>Select Icon 😃</Text>
+          <ScrollView
+            contentContainerStyle={{
+              minHeight: "100%",
+              paddingBottom: 40,
+              alignItems: "center",
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.pageTitle}>Select Icon 😃</Text>
 
-          <View style={{ alignItems: "center", gap: 10 }}>
-            <Text style={{ fontSize: 200 }}>
-              {unicodeToEmoji(icons[currentIndex])}
-            </Text>
+            <View style={{ alignItems: "center", gap: 10 }}>
+              <Text style={{ fontSize: 200 }}>
+                {unicodeToEmoji(icons[currentIndex])}
+              </Text>
 
-            <View style={{ flexDirection: "row", gap: 20 }}>
-              <TouchableOpacity
-                onPress={prevIcon}
-                style={styles.triangleLeft}
-              ></TouchableOpacity>
+              <View style={{ flexDirection: "row", gap: 20 }}>
+                <TouchableOpacity
+                  onPress={prevIcon}
+                  style={styles.triangleLeft}
+                ></TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={nextIcon}
-                style={styles.triangleRight}
-              ></TouchableOpacity>
+                <TouchableOpacity
+                  onPress={nextIcon}
+                  style={styles.triangleRight}
+                ></TouchableOpacity>
+              </View>
+              <Text style={styles.sectionTitleText}>Change name</Text>
+
+              <TextInput
+                style={[
+                  styles.button,
+                  styles.buttonText,
+                  { textAlign: "center" },
+                ]}
+                placeholder="Enter name"
+                placeholderTextColor="#ffffff"
+                value={buttonText}
+                onChangeText={setButtonText}
+                keyboardType="default"
+                maxLength={17}
+              />
+
+              <TouchableOpacity style={styles.button} onPress={saveName}>
+                <Text style={styles.buttonText}>SAVE</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.sectionTitleText}>Change name</Text>
-
-            <TextInput
-              style={[
-                styles.button,
-                styles.buttonText,
-                { textAlign: "center" },
-              ]}
-              placeholder="Enter name"
-              placeholderTextColor="#ffffff"
-              value={buttonText}
-              onChangeText={setButtonText}
-              keyboardType="numeric"
-              maxLength={17}
-            />
-
-            <TouchableOpacity style={styles.button} onPress={saveName}>
-              <Text style={styles.buttonText}>SAVE</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </ImageBackground>
     </View>
   );
