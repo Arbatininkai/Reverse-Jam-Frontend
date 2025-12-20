@@ -67,11 +67,10 @@ export default function MusicPlayer({
     if (!player || !isReady) return;
     let mounted = true;
     const sub = player.addListener("playbackStatusUpdate", (status) => {
+      if (!status.isLoaded) return;
       if (!mounted) return;
-      if (status.isLoaded) {
-        setPosition(status.currentTime);
-        setDuration(status.duration);
-      }
+      setPosition(status.currentTime);
+      setDuration(status.duration);
       if (status.didJustFinish) {
         if (player.isLoaded) {
           player.pause();
