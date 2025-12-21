@@ -11,7 +11,6 @@ export default function RecordingPlayer({ uri: recordedUri }: any) {
 
   const player = useAudioPlayer(undefined);
 
-
   useEffect(() => {
     let isMounted = true;
     const loadRecording = async () => {

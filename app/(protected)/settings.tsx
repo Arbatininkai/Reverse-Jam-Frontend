@@ -24,10 +24,9 @@ export default function Settings() {
 
         <View
           style={{
-            flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            paddingBottom: 150,
+            marginTop: 120,
           }}
         >
           <TouchableOpacity
@@ -40,14 +39,7 @@ export default function Settings() {
             onPress={() => router.push("/name")}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Change Name</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.push("/audio")}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Audio</Text>
+            <Text style={styles.buttonText}>Change Profile</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
