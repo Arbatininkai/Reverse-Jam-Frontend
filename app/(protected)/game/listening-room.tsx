@@ -260,7 +260,7 @@ export default function ListeningRoom() {
           <Text style={styles.sectionTitleText}>
             Round: {currentRound + 1} / {totalRounds}
           </Text>
-          <Text style={styles.sectionTitleText}>
+          <Text style={styles.smallerText}>
             Player: {currentIndex + 1} / {playerCount}
           </Text>
 
