@@ -170,7 +170,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({
     connection.on("LobbyDeleted", async () => {
       console.log("Lobby was deleted by the owner");
       if (lobby?.id) await Storage.removeItem(`lobby-${lobby.id}`);
-      if (pathname !== "/") router.replace("/");
+      if (pathname !== "../main") router.replace("../main");
       await connection.stop();
       connectionRef.current = null;
     });

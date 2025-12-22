@@ -82,17 +82,18 @@ export default function Join() {
           <Ionicons name="arrow-back" size={30} color="#fff" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.pageTitle}>Join Game Screen</Text>
 
         <View
           style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            paddingBottom: 150,
+            paddingBottom: 60,
           }}
         >
-          <Text style={styles.sectionTitleText}>Join random lobby</Text>
+          <Text style={[styles.sectionTitleText, { marginBottom: 15 }]}>
+            Join random lobby
+          </Text>
 
           <TouchableOpacity
             style={styles.button}
@@ -105,7 +106,7 @@ export default function Join() {
 
           <TextInput
             style={[styles.button, styles.buttonText, { textAlign: "center" }]}
-            placeholder="#_ _ _ _"
+            placeholder="#_ _ _ _ _ _"
             placeholderTextColor="#ffffff"
             value={buttonText}
             onChangeText={(text) => {

@@ -26,7 +26,7 @@ export default function Settings() {
           style={{
             justifyContent: "center",
             alignItems: "center",
-            marginTop: 120,
+            marginTop: 90,
           }}
         >
           <TouchableOpacity

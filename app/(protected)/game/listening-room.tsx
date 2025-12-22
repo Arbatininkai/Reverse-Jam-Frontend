@@ -260,12 +260,12 @@ export default function ListeningRoom() {
           <Text style={styles.sectionTitleText}>
             Round: {currentRound + 1} / {totalRounds}
           </Text>
-          <Text style={styles.smallerText}>
+          <Text style={styles.sectionTitleText}>
             Player: {currentIndex + 1} / {playerCount}
           </Text>
 
           {!allRecordingsReady ? (
-            <Text style={styles.sectionTitleText}>
+            <Text style={styles.smallerText}>
               Waiting for all players to submit their recordings...
             </Text>
           ) : (
@@ -354,7 +354,7 @@ export default function ListeningRoom() {
                   <Text style={styles.emojiText}>
                     {emojis[Math.round(aiVotingScore)].emoji}
                   </Text>
-                  <Text style={styles.smallestText}>
+                  <Text style={styles.mediumText}>
                     AI rating: {Number(aiVotingScore).toFixed(2)}/5
                   </Text>
                 </View>

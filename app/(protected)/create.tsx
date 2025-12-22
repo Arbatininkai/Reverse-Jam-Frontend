@@ -155,7 +155,7 @@ export default function Create() {
           </View>
 
           {errorMessage && errorMessage != "" && (
-            <Text style={[styles.errorText, { marginTop: 10 }]}>
+            <Text style={[styles.errorText, { marginTop: 20 }]}>
               {errorMessage}
             </Text>
           )}
@@ -184,7 +184,7 @@ export default function Create() {
             </View>
           </RadioButton.Group>
 
-          <View style={createStyles.createButtonWrapper}>
+          <View style={[createStyles.createButtonWrapper, { marginTop: 30 }]}>
             <TouchableOpacity onPress={handleCreateLobby} style={styles.button}>
               <Text style={styles.buttonText}>Create Lobby</Text>
             </TouchableOpacity>
