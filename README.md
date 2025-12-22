@@ -90,6 +90,14 @@ For linux:
 sudo apt-get install android-tools-adb
 ```
 
-# Signing in with Google
+# ENV Variables
 
-To sign in with Google, make sure you have the backend API running on your machine
+To run the app, you need to create a `.env` file in the root directory and set the following environment variables:
+
+```
+EXPO_PUBLIC_WEB_CLIENT_ID="945939078641-no1bls6nnf2s5teqk3m5b1q3kfkorle1.apps.googleusercontent.com"
+EXPO_PUBLIC_ANDROID_CLIENT_ID="945939078641-a354ljb33aeltrn138d288qamgn395a5.apps.googleusercontent.com"
+EXPO_PUBLIC_IOS_CLIENT_ID="945939078641-elo0ietkgqcacrhkotlraf1r3vq3bjdm.apps.googleusercontent.com"
+EXPO_PUBLIC_ANDROID_URL="http://16.16.202.136:5000"
+EXPO_PUBLIC_BASE_URL="http://16.16.202.136:5000"
+```
