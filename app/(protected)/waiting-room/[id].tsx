@@ -112,20 +112,9 @@ export default function Waiting() {
             ))}
           </View>
 
-          <Text style={[styles.smallerText, { marginRight: 10 }]}>
+          <Text style={[styles.smallerText, { marginBottom: 10 }]}>
             Total Rounds: {lobby?.totalRounds || 1}
           </Text>
-
-          {lobby?.ownerId === user?.id && (
-            <View style={createStyles.createButtonWrapper}>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteLobby(lobbyId)}
-              >
-                <Text style={styles.deleteText}>Delete Lobby</Text>
-              </TouchableOpacity>
-            </View>
-          )}
 
           {lobby?.ownerId === user?.id && (
             <View style={createStyles.createButtonWrapper}>
@@ -134,6 +123,17 @@ export default function Waiting() {
                 onPress={() => startGame(Number(id))}
               >
                 <Text style={styles.buttonText}>Start Game</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {lobby?.ownerId === user?.id && (
+            <View style={createStyles.createButtonWrapper}>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteLobby(lobbyId)}
+              >
+                <Text style={styles.deleteText}>Delete Lobby</Text>
               </TouchableOpacity>
             </View>
           )}
